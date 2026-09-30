@@ -12,8 +12,13 @@
         </span>
       </div>
       <div class="ba-toolbar-right">
-        <button type="button" class="btn btn-primary btn-sm" @click="openEditor">
-          <i class="fa-solid fa-pen-to-square"></i> Edit Dokumen
+        <button type="button" class="btn btn-secondary btn-sm" title="Sisipkan titik-titik di posisi kursor (untuk ditulis tangan setelah dicetak)"
+          @mousedown.prevent @click="sisipTitik(false)">
+          <i class="fa-solid fa-ellipsis"></i> Titik-titik
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" title="Sisipkan titik-titik panjang"
+          @mousedown.prevent @click="sisipTitik(true)">
+          <i class="fa-solid fa-grip-lines"></i> Titik panjang
         </button>
         <button type="button" class="btn btn-secondary btn-sm" @click="resetForm">
           <i class="fa-solid fa-rotate-left"></i> Reset
@@ -24,20 +29,11 @@
       </div>
     </div>
 
-    <!-- ═══ PANEL EDITOR (form + kertas) — tersembunyi sampai "Edit Dokumen" diklik ═══ -->
-    <div class="ba-editor" :class="{ open: editorOpen }">
-      <div class="ba-editor-bar">
-        <span class="ba-editor-title"><i class="fa-solid fa-pen-to-square"></i> Edit Dokumen</span>
-        <span class="ba-edit-hint"><i class="fa-solid fa-circle-info"></i> Klik langsung pada titik-titik / teks di kertas untuk mengisi. Yang dibiarkan kosong tetap titik-titik saat dicetak (untuk ditulis tangan).</span>
-        <div class="ba-toolbar-right">
-          <button type="button" class="btn btn-secondary btn-sm" @click="cetakDokumen">
-            <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" @click="closeEditor">
-            <i class="fa-solid fa-xmark"></i> Selesai
-          </button>
-        </div>
-      </div>
+    <div class="ba-edit-hint"><i class="fa-solid fa-circle-info"></i>
+      Klik langsung isian di kertas untuk mengetik. Yang dibiarkan kosong tetap titik-titik saat dicetak.
+      Pakai tombol <b>Titik-titik</b> di atas untuk menyisipkan titik-titik di posisi kursor.
+      <span v-if="dotsMsg" class="ba-edit-warn">{{ dotsMsg }}</span>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
          PRATINJAU DOKUMEN (KERTAS F4)
@@ -371,7 +367,6 @@
       </div>
 
     </div><!-- /ba-canvas -->
-    </div><!-- /ba-editor -->
   </div>
 </template>
 
@@ -487,14 +482,24 @@ function resetForm() {
 
 /* ── Edit langsung di kertas (blok tanda tangan) ──────────────────── */
 /* ── Panel editor (tersembunyi, dibuka lewat tombol "Edit Dokumen") ── */
-const editorOpen = ref(false);
-function openEditor() { editorOpen.value = true; editMode.value = true; } // langsung mode isi di kertas
-function closeEditor() { editMode.value = false; editorOpen.value = false; }
-function onEscKey(e) { if (e.key === 'Escape' && editorOpen.value) closeEditor(); }
-onMounted(() => window.addEventListener('keydown', onEscKey));
-onBeforeUnmount(() => window.removeEventListener('keydown', onEscKey));
+// Kertas selalu langsung bisa diedit (tanpa form, tanpa overlay).
+const editMode = ref(true);
 
-const editMode = ref(false);
+// Tombol toolbar: sisipkan titik-titik pada isian yang sedang difokuskan.
+const dotsMsg = ref('');
+let dotsTimer = null;
+function sisipTitik(panjang) {
+  const el = document.activeElement;
+  const dalamKertas = el && el.isContentEditable && el.closest && el.closest('.ba-canvas');
+  if (!dalamKertas) {
+    dotsMsg.value = 'Klik dulu pada isian di kertas, lalu tekan tombol titik-titik.';
+    clearTimeout(dotsTimer);
+    dotsTimer = setTimeout(() => { dotsMsg.value = ''; }, 3500);
+    return;
+  }
+  dotsMsg.value = '';
+  document.execCommand('insertText', false, panjang ? '…'.repeat(40) : '…'.repeat(15));
+}
 
 
 // Dipanggil saat kursor keluar (blur) dari span contenteditable di blok
@@ -564,69 +569,6 @@ function cetakDokumen() {
 .ba-toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ── Form card ───────────────────────────────────────────────────── */
-/* ── Panel editor (overlay) ───────────────────────────────────────── */
-.ba-editor { display: none; }
-.ba-editor.open {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  overflow-y: auto;
-  padding: 0 24px 24px;
-  background: var(--bg-primary);
-}
-.ba-editor-bar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 -24px;
-  padding: 12px 24px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--card-shadow);
-}
-.ba-editor-title {
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ba-form-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-}
-.ba-form-head {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 18px;
-  font-weight: 700; font-size: 0.85rem;
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-}
-.ba-form-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  padding: 18px;
-}
-.ba-field { display: flex; flex-direction: column; gap: 5px; }
-.ba-field-full { grid-column: 1 / -1; }
-.ba-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
-
 /* ── Canvas ──────────────────────────────────────────────────────── */
 .ba-canvas {
   display: flex; flex-direction: column; gap: 32px;
@@ -735,16 +677,15 @@ function cetakDokumen() {
 
 /* ── Print ───────────────────────────────────────────────────────── */
 @media print {
-  .ba-editor { display: block !important; position: static !important; overflow: visible !important; padding: 0 !important; background: none !important; }
-  .ba-editor-bar { display: none !important; }
-  .ba-toolbar,.ba-form-card { display:none !important; }
+  .ba-toolbar, .ba-edit-hint { display:none !important; }
   .ba-canvas { background:white; padding:0; border:none; gap:0; }
   .ba-paper  { box-shadow:none; page-break-after:always; padding:20mm; }
   .ba-inline-input,.ba-inline-textarea { border:none; background:transparent; padding:0; }
   .ba-fill-editable { background:transparent !important; box-shadow:none !important; outline:none !important; }
   .ba-signer-remove, .ba-signer-add-row { display:none !important; }
 }
-.ba-edit-hint { flex: 1 1 260px; font-size: 0.75rem; color: var(--text-secondary); }
+.ba-edit-hint { font-size: 0.78rem; color: var(--text-secondary); padding: 0 4px; }
+.ba-edit-warn { margin-left: 8px; color: #e03131; font-weight: 600; }
 .ba-edit-hint i { margin-right: 4px; }
 @media print { .ba-edit-hint { display: none !important; } }
 </style>
