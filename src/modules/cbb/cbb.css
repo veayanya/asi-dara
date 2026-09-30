@@ -1,0 +1,186 @@
+/* ==========================================================================
+   Modul Chatbot Bapperida (cbb) — mengikuti tema aplikasi
+   --------------------------------------------------------------------------
+   Modul ini TIDAK punya palet sendiri. Semua warna diambil dari token global
+   di assets/style.css (--bg-*, --text-*, --primary-color, --accent-color, dst.)
+   sehingga otomatis ikut mode terang/gelap ([data-theme="dark"]).
+   Semua aturan di-scope ke .cbb-root; class & keyframes diberi awalan "cbb-"
+   agar tidak bentrok dengan gaya global (mis. keyframes "fadeIn" aplikasi).
+   ========================================================================== */
+.cbb-root {
+  /* alias yang dipakai inline-style di komponen */
+  --border-subtle: var(--border-color);
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --radius-md: var(--border-radius-md, 14px);
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100vh - var(--header-height, 70px) - 32px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  color: var(--text-primary);
+  line-height: 1.6;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.cbb-root *,
+.cbb-root *::before,
+.cbb-root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.cbb-root h1,
+.cbb-root h2,
+.cbb-root h3 {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+}
+
+.cbb-root button,
+.cbb-root input,
+.cbb-root textarea,
+.cbb-root select {
+  font-family: inherit;
+}
+
+/* Scrollbar (hanya di dalam modul) */
+.cbb-root ::-webkit-scrollbar { width: 6px; height: 6px; }
+.cbb-root ::-webkit-scrollbar-track { background: transparent; }
+.cbb-root ::-webkit-scrollbar-thumb { background: var(--border-color-strong); border-radius: 999px; }
+.cbb-root ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+/* ---- Panel & kartu: sama dengan kartu di halaman lain (flat, border tipis) ---- */
+.cbb-glass-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-border-radius, 20px);
+  box-shadow: var(--card-shadow);
+}
+
+.cbb-glass-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md, 14px);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cbb-glass-card:hover {
+  border-color: var(--border-color-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* ---- Tombol ---- */
+.cbb-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius-sm, 10px);
+  border: 1px solid var(--primary-color);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cbb-btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px var(--primary-glow);
+}
+
+.cbb-btn-primary:active:not(:disabled) { transform: translateY(0); }
+.cbb-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cbb-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius-sm, 10px);
+  border: 1px solid var(--border-color-strong);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.cbb-btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+}
+
+/* ---- Badge ---- */
+.cbb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.cbb-badge-emerald { background: var(--primary-glow);  color: var(--primary-color); border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent); }
+.cbb-badge-gold    { background: var(--accent-glow);   color: var(--accent-color);  border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent); }
+.cbb-badge-blue    { background: var(--info-glow);     color: var(--info-color);    border: 1px solid color-mix(in srgb, var(--info-color) 35%, transparent); }
+
+/* ---- Elemen interaktif kecil (dulu memakai utilitas Tailwind yang tidak aktif) ---- */
+.cbb-chip:hover {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  background: var(--primary-glow) !important;
+}
+
+.cbb-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.cbb-input::placeholder { color: var(--text-muted); }
+
+.cbb-clear-btn:hover { color: var(--danger-color) !important; background: var(--danger-glow) !important; }
+.cbb-copy-btn:hover  { color: var(--primary-color) !important; }
+.cbb-close-btn:hover { color: var(--text-primary) !important; }
+
+/* ---- Animasi (keyframes berawalan cbb agar tidak menimpa "fadeIn" aplikasi) ---- */
+@keyframes cbbFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cbbPulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.06); }
+}
+
+.cbb-animate-fade-in {
+  animation: cbbFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.cbb-pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-color);
+  box-shadow: 0 0 8px var(--success-color);
+  animation: cbbPulseSlow 2s infinite ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cbb-animate-fade-in, .cbb-pulse-indicator { animation: none; }
+}
