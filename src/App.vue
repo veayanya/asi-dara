@@ -140,7 +140,7 @@
  <MenuNonaktif v-if="isMenuBlocked('pra-rka')" />
  <template v-else>
  <PageHero icon="clipboard-list" title="Buat Pra RKA" subtitle="Susun rancangan Renja PD" />
- <ErenjaStudio />
+ <PraRka />
  </template>
  </section>
 
@@ -209,7 +209,7 @@ import MenuNonaktif from './components/MenuNonaktif.vue';
 import BantuanPertanyaan from './components/BantuanPertanyaan.vue';
 import PetunjukPenggunaan from './components/PetunjukPenggunaan.vue';
 import AdminDashboard from './components/AdminDashboard.vue';
-import ErenjaStudio from './components/ErenjaStudio.vue';
+import PraRka from './modules/pra-rka/PraRka.vue';
 
 const {
  currentTab,
