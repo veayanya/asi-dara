@@ -12,73 +12,32 @@
         </span>
       </div>
       <div class="ba-toolbar-right">
-        <button type="button" class="btn btn-sm" :class="editMode ? 'btn-success' : 'btn-secondary'" @click="toggleEditMode">
-          <i class="fa-solid" :class="editMode ? 'fa-check' : 'fa-pen'"></i>
-          {{ editMode ? 'Selesai Edit' : 'Edit di Kertas' }}
+        <button type="button" class="btn btn-primary btn-sm" @click="openEditor">
+          <i class="fa-solid fa-pen-to-square"></i> Edit Dokumen
         </button>
         <button type="button" class="btn btn-secondary btn-sm" @click="resetForm">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </button>
-        <button type="button" class="btn btn-primary btn-sm" @click="cetakDokumen">
+        <button type="button" class="btn btn-secondary btn-sm" @click="cetakDokumen">
           <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
         </button>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         FORM INPUT (IDENTITAS DOKUMEN)
-    ════════════════════════════════════════════════════════════════ -->
-    <div class="ba-form-card">
-      <div class="ba-form-head">
-        <i class="fa-solid fa-pen-to-square"></i>
-        <span>Isi Data Dokumen</span>
-      </div>
-      <div class="ba-form-grid">
-        <div class="ba-field">
-          <label class="ba-label">Hari</label>
-          <input v-model="form.hari" type="text" class="form-input" placeholder="Senin / Selasa …" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Tanggal</label>
-          <input v-model="form.tanggal" type="number" class="form-input" min="1" max="31" placeholder="1 – 31" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Bulan</label>
-          <select v-model="form.bulan" class="form-input">
-            <option value="">— Pilih Bulan —</option>
-            <option v-for="b in bulanList" :key="b" :value="b">{{ b }}</option>
-          </select>
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Jenis OPD</label>
-          <select v-model="form.jenisOpd" class="form-input">
-            <option value="Kecamatan">Kecamatan</option>
-            <option value="Dinas">Dinas</option>
-            <option value="Badan">Badan</option>
-          </select>
-        </div>
-        <div class="ba-field ba-field-full">
-          <label class="ba-label">Nama Perangkat Daerah</label>
-          <input v-model="form.namaOpd" type="text" class="form-input" placeholder="Nama Kecamatan / Dinas / Badan …" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Bidang Verifikator (Kabid)</label>
-          <input v-model="form.kabid" type="text" class="form-input" placeholder="Bidang Perencanaan …" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Nama Verifikator</label>
-          <input v-model="form.namaVerifikator" type="text" class="form-input" placeholder="Nama lengkap verifikator" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Nama Ketua Tim Penyusun OPD</label>
-          <input v-model="form.namaKetuaTim" type="text" class="form-input" placeholder="Nama lengkap" />
-        </div>
-        <div class="ba-field">
-          <label class="ba-label">Nama OPD (Formulir 2 &amp; TTD)</label>
-          <input v-model="form.namaOpdF2" type="text" class="form-input" placeholder="Sama bila sama dengan nama di atas" />
+    <!-- ═══ PANEL EDITOR (form + kertas) — tersembunyi sampai "Edit Dokumen" diklik ═══ -->
+    <div class="ba-editor" :class="{ open: editorOpen }">
+      <div class="ba-editor-bar">
+        <span class="ba-editor-title"><i class="fa-solid fa-pen-to-square"></i> Edit Dokumen</span>
+        <span class="ba-edit-hint"><i class="fa-solid fa-circle-info"></i> Klik langsung pada titik-titik / teks di kertas untuk mengisi. Yang dibiarkan kosong tetap titik-titik saat dicetak (untuk ditulis tangan).</span>
+        <div class="ba-toolbar-right">
+          <button type="button" class="btn btn-secondary btn-sm" @click="cetakDokumen">
+            <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" @click="closeEditor">
+            <i class="fa-solid fa-xmark"></i> Selesai
+          </button>
         </div>
       </div>
-    </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
          PRATINJAU DOKUMEN (KERTAS F4)
@@ -92,12 +51,12 @@
         <div class="ba-doc-subtitle">RENCANA KERJA (RENJA) PERANGKAT DAERAH TAHUN 2027</div>
 
         <p class="ba-para">
-          Pada hari ini, <span class="ba-fill">{{ form.hari || '…' }}</span>, tanggal
-          <span class="ba-fill">{{ form.tanggal || '…' }}</span> bulan
-          <span class="ba-fill">{{ form.bulan || '…' }}</span>
+          Pada hari ini, <InlineFill v-model="form.hari" :editable="editMode" ph="…………." />, tanggal
+          <InlineFill v-model="form.tanggal" :editable="editMode" ph="……" /> bulan
+          <InlineFill v-model="form.bulan" :editable="editMode" ph="………………………" />
           tahun Dua Ribu Dua Puluh Enam telah dilaksanakan verifikasi terhadap Rancangan Akhir
           Renja Perangkat Daerah
-          <span class="ba-fill">{{ form.jenisOpd || 'Kecamatan/Dinas/Badan' }}/{{ form.namaOpd || '…' }}</span>
+          <InlineFill v-model="form.jenisOpd" :editable="editMode" ph="Kecamatan/Dinas/Badan" />/<InlineFill v-model="form.namaOpd" :editable="editMode" ph="………………………" />
           Kabupaten Cirebon, yang dihadiri tim penyusun Renja Perangkat Daerah sebagaimana
           Surat Keputusan Bupati, terlampir.
         </p>
@@ -141,22 +100,22 @@
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">VERIFIKATOR,</div>
                 <div class="ba-ttd-sub">A.n Kepala BAPPERIDA</div>
-                <div class="ba-ttd-sub">Kabid <span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('kabid', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.kabid || (editMode ? '' : '………………………………….') }}</span></div>
+                <div class="ba-ttd-sub">Kabid <InlineFill v-model="form.kabid" :editable="editMode" ph="…………………………" /></div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaVerifikator', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaVerifikator || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaVerifikator" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">A.n. KEPALA Perangkat Daerah/</div>
                 <div class="ba-ttd-sub">Ketua Tim Penyusun</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaKetuaTim', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaKetuaTim || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaKetuaTim" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
                 <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
                 <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
                 <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'name', $event)">{{ s.name || (editMode ? '' : '………………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
               </td>
             </tr>
           </tbody>
@@ -173,7 +132,7 @@
       <div class="ba-paper">
         <div class="ba-form-label">Formulir 1.</div>
         <div class="ba-form-title">Pengendalian dan Evaluasi terhadap Kebijakan Renja-PD</div>
-        <div class="ba-opd-label">PD : <span class="ba-fill">{{ form.namaOpd || '…' }}</span></div>
+        <div class="ba-opd-label">PD : <InlineFill v-model="form.namaOpd" :editable="editMode" ph="……………………………………" /></div>
 
         <table class="ba-table ba-checklist-table">
           <thead>
@@ -226,22 +185,22 @@
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">VERIFIKATOR,</div>
                 <div class="ba-ttd-sub">A.n Kepala BAPPERIDA</div>
-                <div class="ba-ttd-sub">Kabid <span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('kabid', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.kabid || (editMode ? '' : '………………………………….') }}</span></div>
+                <div class="ba-ttd-sub">Kabid <InlineFill v-model="form.kabid" :editable="editMode" ph="…………………………" /></div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaVerifikator', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaVerifikator || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaVerifikator" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">A.n. KEPALA Perangkat Daerah</div>
-                <div class="ba-ttd-sub"><span class="ba-fill">{{ form.namaOpdF2 || form.namaOpd || '………………………………….' }}</span></div>
+                <div class="ba-ttd-sub"><InlineFill :model-value="form.namaOpdF2 || form.namaOpd" @update:model-value="v => form.namaOpdF2 = v" :editable="editMode" ph="………………………………………" /></div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaKetuaTim', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaKetuaTim || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaKetuaTim" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
                 <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
                 <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
                 <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'name', $event)">{{ s.name || (editMode ? '' : '………………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
               </td>
             </tr>
           </tbody>
@@ -259,7 +218,7 @@
         <div class="ba-form-label">Formulir 2.</div>
         <div class="ba-form-title">
           Kesimpulan Pengendalian dan Evaluasi terhadap Kebijakan Renja Perangkat Daerah
-          <span class="ba-fill">{{ form.jenisOpd || '' }} {{ form.namaOpdF2 || form.namaOpd || '…………………………………' }}</span>
+          <InlineFill v-model="form.jenisOpd" :editable="editMode" ph="Kecamatan/Dinas/Badan" /> <InlineFill :model-value="form.namaOpdF2 || form.namaOpd" @update:model-value="v => form.namaOpdF2 = v" :editable="editMode" ph="………………………………" />
           Kabupaten Cirebon
         </div>
 
@@ -297,22 +256,22 @@
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">VERIFIKATOR,</div>
                 <div class="ba-ttd-sub">A.n Kepala BAPPERIDA</div>
-                <div class="ba-ttd-sub">Kabid <span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('kabid', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.kabid || (editMode ? '' : '………………………………….') }}</span></div>
+                <div class="ba-ttd-sub">Kabid <InlineFill v-model="form.kabid" :editable="editMode" ph="…………………………" /></div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaVerifikator', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaVerifikator || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaVerifikator" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">A.n. KEPALA Perangkat Daerah/</div>
                 <div class="ba-ttd-sub">Ketua Tim Penyusun</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaKetuaTim', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaKetuaTim || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaKetuaTim" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
                 <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
                 <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
                 <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'name', $event)">{{ s.name || (editMode ? '' : '………………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
               </td>
             </tr>
           </tbody>
@@ -383,22 +342,22 @@
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">VERIFIKATOR,</div>
                 <div class="ba-ttd-sub">A.n Kepala BAPPERIDA</div>
-                <div class="ba-ttd-sub">Kabid <span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('kabid', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.kabid || (editMode ? '' : '………………………………….') }}</span></div>
+                <div class="ba-ttd-sub">Kabid <InlineFill v-model="form.kabid" :editable="editMode" ph="…………………………" /></div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaVerifikator', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaVerifikator || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaVerifikator" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td class="ba-ttd-col">
                 <div class="ba-ttd-label">A.n. KEPALA Perangkat Daerah/</div>
                 <div class="ba-ttd-sub">Ketua Tim Penyusun</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onFieldBlur('namaKetuaTim', $event)" @keydown.enter.prevent="$event.target.blur()">{{ form.namaKetuaTim || (editMode ? '' : '………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="form.namaKetuaTim" :editable="editMode" ph="…………………………" />)</div>
               </td>
               <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
                 <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
                 <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
                 <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
                 <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<span class="ba-fill" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'name', $event)">{{ s.name || (editMode ? '' : '………………………………………….') }}</span>)</div>
+                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
               </td>
             </tr>
           </tbody>
@@ -412,18 +371,20 @@
       </div>
 
     </div><!-- /ba-canvas -->
+    </div><!-- /ba-editor -->
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, onBeforeUnmount } from 'vue';
+import InlineFill from './InlineFill.vue';
 
 /* ── Form identitas ─────────────────────────────────────────────── */
 const form = reactive({
   hari: '',
   tanggal: '',
   bulan: '',
-  jenisOpd: 'Kecamatan',
+  jenisOpd: '',
   namaOpd: '',
   kabid: '',
   namaVerifikator: '',
@@ -515,7 +476,7 @@ const formulir3Results = reactive(
 /* ── Aksi ────────────────────────────────────────────────────────── */
 function resetForm() {
   Object.assign(form, {
-    hari: '', tanggal: '', bulan: '', jenisOpd: 'Kecamatan',
+    hari: '', tanggal: '', bulan: '', jenisOpd: '',
     namaOpd: '', kabid: '', namaVerifikator: '', namaKetuaTim: '', namaOpdF2: ''
   });
   formulir1Results.forEach(r => Object.assign(r, { kesesuaian: '', faktor: '', tindak: '' }));
@@ -525,11 +486,16 @@ function resetForm() {
 }
 
 /* ── Edit langsung di kertas (blok tanda tangan) ──────────────────── */
+/* ── Panel editor (tersembunyi, dibuka lewat tombol "Edit Dokumen") ── */
+const editorOpen = ref(false);
+function openEditor() { editorOpen.value = true; editMode.value = true; } // langsung mode isi di kertas
+function closeEditor() { editMode.value = false; editorOpen.value = false; }
+function onEscKey(e) { if (e.key === 'Escape' && editorOpen.value) closeEditor(); }
+onMounted(() => window.addEventListener('keydown', onEscKey));
+onBeforeUnmount(() => window.removeEventListener('keydown', onEscKey));
+
 const editMode = ref(false);
 
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-}
 
 // Dipanggil saat kursor keluar (blur) dari span contenteditable di blok
 // tanda tangan. Update disimpan ke `form` supaya semua kemunculan blok
@@ -598,6 +564,44 @@ function cetakDokumen() {
 .ba-toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ── Form card ───────────────────────────────────────────────────── */
+/* ── Panel editor (overlay) ───────────────────────────────────────── */
+.ba-editor { display: none; }
+.ba-editor.open {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+  background: var(--bg-primary);
+}
+.ba-editor-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 -24px;
+  padding: 12px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+.ba-editor-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ba-form-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -731,6 +735,8 @@ function cetakDokumen() {
 
 /* ── Print ───────────────────────────────────────────────────────── */
 @media print {
+  .ba-editor { display: block !important; position: static !important; overflow: visible !important; padding: 0 !important; background: none !important; }
+  .ba-editor-bar { display: none !important; }
   .ba-toolbar,.ba-form-card { display:none !important; }
   .ba-canvas { background:white; padding:0; border:none; gap:0; }
   .ba-paper  { box-shadow:none; page-break-after:always; padding:20mm; }
@@ -738,4 +744,7 @@ function cetakDokumen() {
   .ba-fill-editable { background:transparent !important; box-shadow:none !important; outline:none !important; }
   .ba-signer-remove, .ba-signer-add-row { display:none !important; }
 }
+.ba-edit-hint { flex: 1 1 260px; font-size: 0.75rem; color: var(--text-secondary); }
+.ba-edit-hint i { margin-right: 4px; }
+@media print { .ba-edit-hint { display: none !important; } }
 </style>
