@@ -101,22 +101,9 @@
                 <div class="ba-ttd-space"></div>
                 <div class="ba-ttd-name">(<InlineFill v-model="form.namaOpd2" :editable="editMode" ph="…………………………" />)</div>
               </td>
-              <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
-                <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
-                <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
-                <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
-                <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
-              </td>
             </tr>
           </tbody>
         </table>
-
-        <div v-if="editMode" class="ba-signer-add-row">
-          <button type="button" class="ba-signer-add" @click="addSigner">
-            <i class="fa-solid fa-plus"></i> Tambah Penandatangan
-          </button>
-        </div>
       </div>
 
       <!-- ── HALAMAN 2: FORMULIR 1 ───────────────────────────────────── -->
@@ -188,22 +175,9 @@
                 <div class="ba-ttd-space"></div>
                 <div class="ba-ttd-name">(<InlineFill v-model="form.namaOpd2" :editable="editMode" ph="…………………………" />)</div>
               </td>
-              <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
-                <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
-                <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
-                <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
-                <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
-              </td>
             </tr>
           </tbody>
         </table>
-
-        <div v-if="editMode" class="ba-signer-add-row">
-          <button type="button" class="ba-signer-add" @click="addSigner">
-            <i class="fa-solid fa-plus"></i> Tambah Penandatangan
-          </button>
-        </div>
       </div>
 
       <!-- ── HALAMAN 3: FORMULIR 2 ───────────────────────────────────── -->
@@ -259,22 +233,9 @@
                 <div class="ba-ttd-space"></div>
                 <div class="ba-ttd-name">(<InlineFill v-model="form.namaOpd2" :editable="editMode" ph="…………………………" />)</div>
               </td>
-              <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
-                <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
-                <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
-                <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
-                <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
-              </td>
             </tr>
           </tbody>
         </table>
-
-        <div v-if="editMode" class="ba-signer-add-row">
-          <button type="button" class="ba-signer-add" @click="addSigner">
-            <i class="fa-solid fa-plus"></i> Tambah Penandatangan
-          </button>
-        </div>
       </div>
 
       <!-- ── HALAMAN 4: FORMULIR 3 ───────────────────────────────────── -->
@@ -354,22 +315,9 @@
                 <div class="ba-ttd-space"></div>
                 <div class="ba-ttd-name">(<InlineFill v-model="form.namaOpd2" :editable="editMode" ph="…………………………" />)</div>
               </td>
-              <td v-for="(s, sIdx) in extraSigners" :key="s.id" class="ba-ttd-col">
-                <button v-if="editMode" type="button" class="ba-signer-remove" @click="removeSigner(sIdx)" title="Hapus penandatangan ini">&times;</button>
-                <div class="ba-ttd-label" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'label', $event)">{{ s.label }}</div>
-                <div class="ba-ttd-sub" :class="{ 'ba-fill-editable': editMode }" :contenteditable="editMode" @blur="onSignerBlur(s, 'sub', $event)">{{ s.sub }}</div>
-                <div class="ba-ttd-space"></div>
-                <div class="ba-ttd-name">(<InlineFill v-model="s.name" :editable="editMode" ph="…………………………" />)</div>
-              </td>
             </tr>
           </tbody>
         </table>
-
-        <div v-if="editMode" class="ba-signer-add-row">
-          <button type="button" class="ba-signer-add" @click="addSigner">
-            <i class="fa-solid fa-plus"></i> Tambah Penandatangan
-          </button>
-        </div>
       </div>
     </div><!-- /ba-canvas -->
 
@@ -494,32 +442,6 @@ function sisipTitik(panjang) {
 // blok VERIFIKATOR (halaman 1, Formulir 1, 2, 3) tetap sinkron.
 function onFieldBlur(field, event) {
   form[field] = event.target.innerText.trim();
-}
-
-/* ── Kolom penandatangan tambahan (bisa tambah/hapus) ───────────────── */
-// Dua kolom bawaan (Verifikator & Ketua Tim) tetap tetap; array ini
-// menampung kolom EKSTRA yang ditambahkan lewat tombol "+ Tambah
-// Penandatangan". Karena reactive & dipakai di ke-4 halaman, satu kali
-// tambah/hapus langsung sinkron di seluruh dokumen.
-let signerSeq = 0;
-const extraSigners = reactive([]);
-
-function addSigner() {
-  signerSeq += 1;
-  extraSigners.push({
-    id: `signer-${Date.now()}-${signerSeq}`,
-    label: 'PENANDATANGAN,',
-    sub: 'Jabatan / Instansi',
-    name: '',
-  });
-}
-
-function removeSigner(idx) {
-  extraSigners.splice(idx, 1);
-}
-
-function onSignerBlur(signer, field, event) {
-  signer[field] = event.target.innerText.trim();
 }
 
 function cetakDokumen() {
@@ -702,35 +624,6 @@ function cetakDokumen() {
 .ba-ttd-space { height: 70px; }
 .ba-ttd-name { font-weight: 700; border-top: 1px solid #1a1d21; display: inline-block; padding-top: 4px; min-width: 180px; }
 
-/* Kolom penandatangan ekstra: tombol tambah/hapus */
-.ba-signer-remove {
-  position: absolute;
-  top: 0;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  line-height: 18px;
-  border: 1px solid #e03131;
-  color: #e03131;
-  background: #fff5f5;
-  border-radius: 50%;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-}
-.ba-signer-remove:hover { background: #e03131; color: #fff; }
-.ba-signer-add-row { text-align: center; margin: 10px 0 4px; }
-.ba-signer-add {
-  border: 1px dashed #495057;
-  background: #f8f9fa;
-  color: #495057;
-  border-radius: 6px;
-  padding: 5px 14px;
-  font-size: 9pt;
-  cursor: pointer;
-}
-.ba-signer-add:hover { background: #e9ecef; }
 
 /* ── Input di dalam tabel ───────────────────────────────────────────── */
 .ba-inline-input {
@@ -786,7 +679,6 @@ function cetakDokumen() {
     box-shadow: none !important;
     outline: none !important;
   }
-  .ba-signer-remove, .ba-signer-add-row { display: none !important; }
 }
 .ba-edit-hint { font-size: 0.78rem; color: var(--text-secondary); padding: 0 4px; }
 .ba-edit-warn { margin-left: 8px; color: #e03131; font-weight: 600; }
