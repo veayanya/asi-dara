@@ -352,10 +352,15 @@
  <span class="kesesuaian-title">Kesesuaian Anggaran Tahun {{ analysis.tahunRencana }} dengan Target Kinerja</span>
  <span class="kesesuaian-status-pill">{{ kesesuaian.status }}</span>
  </div>
+<details class="kesesuaian-detail">
+ <summary class="kesesuaian-detail-toggle">Lihat penjelasan &amp; estimasi biaya</summary>
+ <div class="kesesuaian-detail-body">
  <p class="kesesuaian-penjelasan">{{ kesesuaian.penjelasan }}</p>
  <p v-if="kesesuaian.estimasi_biaya_per_output" class="kesesuaian-estimasi">
  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#1B4D46" stroke-width="2"/><path d="M8 12h8M12 8v8" stroke="#1B4D46" stroke-width="2" stroke-linecap="round"/></svg> Estimasi biaya per output: <strong>{{ kesesuaian.estimasi_biaya_per_output }}</strong>
  </p>
+ </div>
+ </details>
  <div v-if="kesesuaian.proyeksi_pencapaian_target" class="proyeksi-target-box" :class="proyeksiClass">
  <div class="proyeksi-target-top">
  <img
@@ -2781,6 +2786,31 @@ const copyJson = async () => {
 .kesesuaian-card.ok .kesesuaian-status-pill { background: var(--success-glow); color: var(--success-color); }
 .kesesuaian-card.warn .kesesuaian-status-pill { background: var(--warning-glow); color: var(--warning-color); }
 .kesesuaian-card.bad .kesesuaian-status-pill { background: var(--danger-glow); color: var(--danger-color); }
+.kesesuaian-detail { margin: 0 0 8px; }
+.kesesuaian-detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  user-select: none;
+}
+.kesesuaian-detail-toggle::-webkit-details-marker { display: none; }
+.kesesuaian-detail-toggle::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.kesesuaian-detail[open] > .kesesuaian-detail-toggle::before { transform: rotate(45deg); }
+.kesesuaian-detail-toggle:hover { color: var(--text-primary); }
+.kesesuaian-detail-body { margin-top: 8px; }
 .kesesuaian-penjelasan { font-size: 12.5px; color: var(--text-primary); line-height: 1.55; margin: 0 0 6px; }
 .kesesuaian-estimasi { font-size: 12px; color: var(--text-muted); margin: 0; }
 .kesesuaian-estimasi strong { color: var(--text-primary); }

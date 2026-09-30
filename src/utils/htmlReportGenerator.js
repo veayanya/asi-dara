@@ -508,7 +508,13 @@ export function generateAnalysisHtml(doc) {
  .kesesuaian-card.ok .kesesuaian-status-pill { background: #d1fae5; color: #065f46; }
  .kesesuaian-card.warn .kesesuaian-status-pill { background: #fef3c7; color: #92400e; }
  .kesesuaian-card.bad .kesesuaian-status-pill { background: #fee2e2; color: #991b1b; }
- .kesesuaian-penjelasan { font-size: 13px; color: var(--text-primary); line-height: 1.55; margin: 0 0 8px; }
+ .kesesuaian-detail { margin: 0 0 8px; }
+    .kesesuaian-detail-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; font-size: 12px; font-weight: 600; color: var(--text-secondary); user-select: none; }
+    .kesesuaian-detail-toggle::-webkit-details-marker { display: none; }
+    .kesesuaian-detail-toggle::before { content: ''; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform 0.15s ease; }
+    .kesesuaian-detail[open] > .kesesuaian-detail-toggle::before { transform: rotate(45deg); }
+    .kesesuaian-detail-body { margin-top: 8px; }
+    .kesesuaian-penjelasan { font-size: 13px; color: var(--text-primary); line-height: 1.55; margin: 0 0 8px; }
  .kesesuaian-estimasi { font-size: 12px; color: var(--text-secondary); margin: 0 0 10px; }
  .kesesuaian-estimasi strong { color: var(--text-primary); }
 
@@ -1098,10 +1104,15 @@ export function generateAnalysisHtml(doc) {
  <span class="kesesuaian-title">Kesesuaian Anggaran Tahun ${currentTahun} dengan Target Kinerja</span>
  <span class="kesesuaian-status-pill">${kesesuaian.status || 'Sesuai'}</span>
  </div>
+ <details class="kesesuaian-detail">
+ <summary class="kesesuaian-detail-toggle">Lihat penjelasan &amp; estimasi biaya</summary>
+ <div class="kesesuaian-detail-body">
  <p class="kesesuaian-penjelasan">${kesesuaian.penjelasan || 'Alokasi anggaran dinilai memadai untuk mencapai target kinerja yang ditetapkan.'}</p>
  ${kesesuaian.estimasi_biaya_per_output ? `
  <p class="kesesuaian-estimasi"><span></span> Estimasi biaya per output: <strong>${kesesuaian.estimasi_biaya_per_output}</strong></p>
  ` : ''}
+ </div>
+ </details>
  ${kesesuaian.proyeksi_pencapaian_target ? `
  <div class="proyeksi-target-box ${proyeksiClass}">
  <div class="proyeksi-target-top">
