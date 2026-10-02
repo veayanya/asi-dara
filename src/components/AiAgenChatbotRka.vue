@@ -1044,7 +1044,7 @@ function scrollToChatBottom() {
 }
 
 .btn-text:hover {
-  color: var(--danger-color);
+  color: var(--danger-text);
   background: var(--danger-glow);
 }
 
@@ -1069,7 +1069,7 @@ function scrollToChatBottom() {
 }
 
 .text-success {
-  color: var(--success-color);
+  color: var(--success-text);
 }
 
 /* ── Loading & keadaan kosong ───────────────────────────────────────── */
@@ -1092,7 +1092,7 @@ function scrollToChatBottom() {
 .ai-orb {
   width: 64px;
   height: 64px;
-  background: var(--accent-color);
+  background: var(--accent-solid);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1217,7 +1217,7 @@ function scrollToChatBottom() {
 }
 
 .chip-btn i {
-  color: var(--accent-color);
+  color: var(--accent-text);
 }
 
 .chip-btn:hover {
@@ -1276,7 +1276,7 @@ function scrollToChatBottom() {
 }
 
 .chat-bubble-wrapper.user .aibot-avatar {
-  background: var(--accent-color);
+  background: var(--accent-solid);
   border-color: transparent;
   color: #fff;
 }

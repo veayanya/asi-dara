@@ -9,7 +9,7 @@
  <div class="card">
  <div class="card-header">
  <h2 class="card-title">
- <i data-lucide="check-square" class="icon-inline" style="color: var(--success-color);"></i>
+ <i data-lucide="check-square" class="icon-inline" style="color: var(--success-text);"></i>
  Parameter Kebijakan & Threshold Audit
  </h2>
  </div>

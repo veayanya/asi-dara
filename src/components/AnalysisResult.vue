@@ -2647,7 +2647,7 @@ const copyJson = async () => {
  margin-bottom: 10px;
 }
 .target-col .indikator-col-header { background: var(--info-glow); color: var(--info-hover); }
-.anggaran-col .indikator-col-header { background: var(--success-glow); color: var(--success-color); }
+.anggaran-col .indikator-col-header { background: var(--success-glow); color: var(--success-text); }
 
 .indikator-item-card {
  border: 1px solid var(--border-color);
@@ -2726,7 +2726,7 @@ const copyJson = async () => {
  letter-spacing: 0.02em;
 }
 .anggaran-year-body { display: flex; align-items: baseline; gap: 8px; }
-.anggaran-year-jumlah { font-size: 16px; font-weight: 700; color: var(--success-color); }
+.anggaran-year-jumlah { font-size: 16px; font-weight: 700; color: var(--success-text); }
 .anggaran-year-delta {
  display: flex;
  align-items: center;
@@ -2738,8 +2738,8 @@ const copyJson = async () => {
  border-radius: 7px;
  width: fit-content;
 }
-.anggaran-year-delta.up { color: var(--success-color); background: var(--success-glow); }
-.anggaran-year-delta.down { color: var(--danger-color); background: var(--danger-glow); }
+.anggaran-year-delta.up { color: var(--success-text); background: var(--success-glow); }
+.anggaran-year-delta.down { color: var(--danger-text); background: var(--danger-glow); }
 .delta-arrow { font-size: 10px; }
 
 .indikator-anggaran-note {
@@ -2783,9 +2783,9 @@ const copyJson = async () => {
  background: var(--border-color);
  color: var(--text-primary);
 }
-.kesesuaian-card.ok .kesesuaian-status-pill { background: var(--success-glow); color: var(--success-color); }
-.kesesuaian-card.warn .kesesuaian-status-pill { background: var(--warning-glow); color: var(--warning-color); }
-.kesesuaian-card.bad .kesesuaian-status-pill { background: var(--danger-glow); color: var(--danger-color); }
+.kesesuaian-card.ok .kesesuaian-status-pill { background: var(--success-glow); color: var(--success-text); }
+.kesesuaian-card.warn .kesesuaian-status-pill { background: var(--warning-glow); color: var(--warning-text); }
+.kesesuaian-card.bad .kesesuaian-status-pill { background: var(--danger-glow); color: var(--danger-text); }
 .kesesuaian-detail { margin: 0 0 8px; }
 .kesesuaian-detail-toggle {
   display: inline-flex;
@@ -2843,9 +2843,9 @@ const copyJson = async () => {
  color: var(--text-primary);
  white-space: nowrap;
 }
-.proyeksi-target-box.ok .proyeksi-target-pill { background: var(--success-glow); color: var(--success-color); }
-.proyeksi-target-box.warn .proyeksi-target-pill { background: var(--warning-glow); color: var(--warning-color); }
-.proyeksi-target-box.bad .proyeksi-target-pill { background: var(--danger-glow); color: var(--danger-color); }
+.proyeksi-target-box.ok .proyeksi-target-pill { background: var(--success-glow); color: var(--success-text); }
+.proyeksi-target-box.warn .proyeksi-target-pill { background: var(--warning-glow); color: var(--warning-text); }
+.proyeksi-target-box.bad .proyeksi-target-pill { background: var(--danger-glow); color: var(--danger-text); }
 .proyeksi-target-alasan { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 6px 0 0; }
 
 /* ══════ 8. Ringkasan Efektif & Inefektif per Rekening ══════ */
@@ -2875,8 +2875,8 @@ const copyJson = async () => {
  line-height: 1.1;
  color: var(--text-primary);
 }
-.efektivitas-summary-pill.tone-green .efektivitas-summary-count { color: var(--success-color); }
-.efektivitas-summary-pill.tone-red .efektivitas-summary-count { color: var(--danger-color); }
+.efektivitas-summary-pill.tone-green .efektivitas-summary-count { color: var(--success-text); }
+.efektivitas-summary-pill.tone-red .efektivitas-summary-count { color: var(--danger-text); }
 .efektivitas-summary-label {
  font-size: 11.5px;
  font-weight: 700;
@@ -2906,8 +2906,8 @@ const copyJson = async () => {
  border-radius: 20px;
  margin-bottom: 12px;
 }
-.efektivitas-col.efektif .efektivitas-col-header { background: var(--success-glow); color: var(--success-color); }
-.efektivitas-col.tidak-efektif .efektivitas-col-header { background: var(--danger-glow); color: var(--danger-color); }
+.efektivitas-col.efektif .efektivitas-col-header { background: var(--success-glow); color: var(--success-text); }
+.efektivitas-col.tidak-efektif .efektivitas-col-header { background: var(--danger-glow); color: var(--danger-text); }
 
 .efektivitas-card {
  background: #fff;

@@ -3364,10 +3364,10 @@ onMounted(async () => {
  padding: 4px 12px;
  border-radius: 20px;
  color: #fff;
- background: var(--warning-color);
+ background: var(--warning-solid);
  white-space: nowrap;
 }
-.report-status-badge.status-selesai { background: var(--success-color); }
+.report-status-badge.status-selesai { background: var(--success-solid); }
 .report-status-badge.status-diproses { background: var(--info-color); }
 
 .report-info-grid {

@@ -136,7 +136,7 @@
 }
 
 .cbb-badge-emerald { background: var(--primary-glow);  color: var(--primary-color); border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent); }
-.cbb-badge-gold    { background: var(--accent-glow);   color: var(--accent-color);  border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent); }
+.cbb-badge-gold    { background: var(--accent-glow);   color: var(--accent-text);  border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent); }
 .cbb-badge-blue    { background: var(--info-glow);     color: var(--info-color);    border: 1px solid color-mix(in srgb, var(--info-color) 35%, transparent); }
 
 /* ---- Elemen interaktif kecil (dulu memakai utilitas Tailwind yang tidak aktif) ---- */
@@ -153,7 +153,7 @@
 
 .cbb-input::placeholder { color: var(--text-muted); }
 
-.cbb-clear-btn:hover { color: var(--danger-color) !important; background: var(--danger-glow) !important; }
+.cbb-clear-btn:hover { color: var(--danger-text) !important; background: var(--danger-glow) !important; }
 .cbb-copy-btn:hover  { color: var(--primary-color) !important; }
 .cbb-close-btn:hover { color: var(--text-primary) !important; }
 

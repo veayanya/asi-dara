@@ -82,7 +82,7 @@
  >
  <i data-lucide="x"></i>
  </button>
- <div style="font-weight: bold; font-size: 0.85rem; padding-right: 20px;" :style="{ color: notif.type === 'danger' ? 'var(--danger-color)' : (notif.type === 'success' ? 'var(--success-color)' : 'var(--text-primary)') }">{{ notif.title }}</div>
+ <div style="font-weight: bold; font-size: 0.85rem; padding-right: 20px;" :style="{ color: notif.type === 'danger' ? 'var(--danger-text)' : (notif.type === 'success' ? 'var(--success-text)' : 'var(--text-primary)') }">{{ notif.title }}</div>
  <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3;">{{ notif.message }}</div>
  <div style="font-size: 0.65rem; color: var(--text-muted); text-align: right; margin-top: 4px;">
  {{ new Date(notif.time).toLocaleString('id-ID') }}

@@ -485,7 +485,7 @@ async function executeMerge() {
 
 .bk-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .bk-icon-export { background: rgba(var(--primary-rgb), 0.12); color: var(--primary-color); }
-.bk-icon-restore { background: rgba(var(--accent-rgb), 0.14); color: var(--accent-color); }
+.bk-icon-restore { background: rgba(var(--accent-rgb), 0.14); color: var(--accent-text); }
 .bk-icon-convert { background: rgba(16, 185, 129, 0.12); color: #10b981; }
 .bk-icon-merge { background: rgba(245, 158, 11, 0.14); color: #f59e0b; }
 

@@ -12,7 +12,7 @@
         </div>
         <div class="stat-content">
           <div class="stat-label">Model Gemini 2.5 Flash</div>
-          <div class="stat-value" style="color: var(--success-color); display: flex; align-items: center; gap: 8px;">
+          <div class="stat-value" style="color: var(--success-text); display: flex; align-items: center; gap: 8px;">
             <div class="status-dot pulsing"></div> Siap
           </div>
           <div class="stat-subtext">Google AI Studio</div>

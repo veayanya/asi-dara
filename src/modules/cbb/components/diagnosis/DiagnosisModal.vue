@@ -69,7 +69,7 @@
             style="padding: 1rem 1.15rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.5rem; border-left: 3px solid var(--danger-color);"
           >
             <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span class="cbb-badge" style="background: color-mix(in srgb, var(--danger-color) 15%, transparent); color: var(--danger-color); border: 1px solid color-mix(in srgb, var(--danger-color) 30%, transparent); font-size: 0.7rem;">
+              <span class="cbb-badge" style="background: color-mix(in srgb, var(--danger-color) 15%, transparent); color: var(--danger-text); border: 1px solid color-mix(in srgb, var(--danger-color) 30%, transparent); font-size: 0.7rem;">
                 Kategori {{ cat.nomor }}
               </span>
             </div>

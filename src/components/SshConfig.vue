@@ -814,7 +814,7 @@ watch(sshPreview, () => {
 .btn-danger-link {
  background: none;
  border: none;
- color: var(--danger-color);
+ color: var(--danger-text);
  font-size: 0.75rem;
  cursor: pointer;
  display: flex;
@@ -851,14 +851,14 @@ watch(sshPreview, () => {
 }
 
 .badge-honorarium { background: var(--info-glow); color: var(--info-color); }
-.badge-konsumsi { background: var(--warning-glow); color: var(--warning-color); }
+.badge-konsumsi { background: var(--warning-glow); color: var(--warning-text); }
 .badge-perjalanan_dinas { background: var(--success-glow); color: var(--success-hover); }
 .badge-sewa { background: var(--primary-glow); color: #4c1d95; }
-.badge-atk { background: var(--danger-glow); color: var(--danger-color); }
+.badge-atk { background: var(--danger-glow); color: var(--danger-text); }
 .badge-cetak { background: var(--primary-glow); color: #9d174d; }
 .badge-akomodasi { background: var(--info-glow); color: #075985; }
 .badge-bahan { background: var(--success-glow); color: #064e3b; }
-.badge-jasa { background: var(--success-glow); color: var(--success-color); }
+.badge-jasa { background: var(--success-glow); color: var(--success-text); }
 .badge-lainnya { background: var(--bg-tertiary); color: var(--text-secondary); }
 
 .ssh-filter-row {

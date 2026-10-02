@@ -969,7 +969,7 @@ const copyJson = async () => {
 .sroi-header h2 { font-size: 16px; font-weight: 700; margin: 0; }
 .model-badge {
  background: var(--success-glow);
- color: var(--success-color);
+ color: var(--success-text);
  font-size: 11px;
  font-weight: 700;
  padding: 4px 10px;
@@ -1046,7 +1046,7 @@ const copyJson = async () => {
  margin-bottom: 6px;
 }
 .stat-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
-.stat-value.deadweight { color: var(--danger-color); }
+.stat-value.deadweight { color: var(--danger-text); }
 .stat-value.positive { color: var(--success-hover); }
 
 .efficiency-summary-card {
@@ -1142,11 +1142,11 @@ const copyJson = async () => {
 }
 .efficiency-item-status.tone-red {
  background: var(--danger-glow);
- color: var(--danger-color);
+ color: var(--danger-text);
 }
 .efficiency-item-status.tone-green {
  background: var(--success-glow);
- color: var(--success-color);
+ color: var(--success-text);
 }
 .efficiency-item-status.tone-blue {
  background: var(--info-glow);
@@ -1247,8 +1247,8 @@ const copyJson = async () => {
  margin-bottom: 8px;
 }
 .kepatuhan-item:not(.sesuai) { border-left-color: var(--danger-color); }
-.kepatuhan-icon { color: var(--success-color); font-weight: 700; }
-.kepatuhan-item:not(.sesuai) .kepatuhan-icon { color: var(--danger-color); }
+.kepatuhan-icon { color: var(--success-text); font-weight: 700; }
+.kepatuhan-item:not(.sesuai) .kepatuhan-icon { color: var(--danger-text); }
 .kepatuhan-label { font-size: 13px; font-weight: 700; }
 .kepatuhan-desc { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 
@@ -1271,8 +1271,8 @@ const copyJson = async () => {
  border-radius: 8px;
  margin-bottom: 10px;
 }
-.realokasi-col.kurangi .realokasi-header { background: var(--danger-glow); color: var(--danger-color); }
-.realokasi-col.tambah .realokasi-header { background: var(--success-glow); color: var(--success-color); }
+.realokasi-col.kurangi .realokasi-header { background: var(--danger-glow); color: var(--danger-text); }
+.realokasi-col.tambah .realokasi-header { background: var(--success-glow); color: var(--success-text); }
 
 .realokasi-card {
  border: 1px solid var(--border-color);
@@ -1290,7 +1290,7 @@ const copyJson = async () => {
 .realokasi-nama { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
 .realokasi-alasan { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 .realokasi-nilai { font-size: 13px; font-weight: 700; }
-.realokasi-nilai.minus { color: var(--danger-color); }
+.realokasi-nilai.minus { color: var(--danger-text); }
 .realokasi-nilai.plus { color: var(--success-hover); }
 .realokasi-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
 

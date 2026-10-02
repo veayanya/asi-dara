@@ -184,7 +184,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Indeks Efisiensi Anggaran</div>
-                <div style="font-size: 2rem; font-weight: 800; color: var(--warning-color); font-family: var(--font-mono);">
+                <div style="font-size: 2rem; font-weight: 800; color: var(--warning-text); font-family: var(--font-mono);">
                   {{ efisiensiResult.efisiensi }}%
                 </div>
               </div>

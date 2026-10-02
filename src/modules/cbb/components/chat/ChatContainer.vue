@@ -61,7 +61,7 @@
           }"
         >
           <!-- Warning / Ethic Notice -->
-          <div v-if="msg.type === 'warning'" style="display: flex; align-items: center; gap: 0.5rem; background: color-mix(in srgb, var(--danger-color) 15%, transparent); border: 1px solid color-mix(in srgb, var(--danger-color) 30%, transparent); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; color: var(--danger-color); font-size: 0.775rem;">
+          <div v-if="msg.type === 'warning'" style="display: flex; align-items: center; gap: 0.5rem; background: color-mix(in srgb, var(--danger-color) 15%, transparent); border: 1px solid color-mix(in srgb, var(--danger-color) 30%, transparent); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; color: var(--danger-text); font-size: 0.775rem;">
             <span>⚠️</span>
             <span>Isu ini di luar kewenangan asisten — mohon arahkan ke pihak berwenang.</span>
           </div>

@@ -199,6 +199,6 @@ watch([isProcessing, progress], () => {
 }
 .queue-item.error .queue-name,
 .queue-item.error .queue-status-text {
- color: var(--danger-color);
+ color: var(--danger-text);
 }
 </style>
