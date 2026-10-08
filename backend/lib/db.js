@@ -45,6 +45,35 @@ const localDataDir = process.env.VERCEL
 const localDbFile = path.join(localDataDir, 'local_db.json');
 const backupDir = path.join(localDataDir, 'backups');
 
+// ─── Penyimpanan PERMANEN ───────────────────────────────────────────────────
+// Di Vercel, disk (termasuk /tmp) hilang tiap server restart/redeploy. Karena
+// itu data penting (user, snapshot backup, konfigurasi) HARUS ada di Neon.
+// Snapshot disimpan sebagai baris app_store dengan key berawalan SNAPSHOT_PREFIX,
+// sehingga ikut terpindah otomatis saat failover antar-slot Neon.
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const SNAPSHOT_PREFIX = '__snapshot_';
+const SNAPSHOT_KEEP = Math.max(1, Number(process.env.DB_SNAPSHOT_KEEP || 5));
+const SNAPSHOT_MIN_INTERVAL_MS = Math.max(0, Number(process.env.DB_SNAPSHOT_INTERVAL_MS || 12 * 60 * 60 * 1000));
+
+/** Key internal (bukan data pengguna): tidak ikut export, restore, maupun cache. */
+function isInternalKey(key) {
+  return key === '__db_pool_state'
+    || key === '__db_migration_history'
+    || key === CROSS_BACKUP_KEY
+    || key === SLOT_CONFIG_KEY
+    || String(key).startsWith(SNAPSHOT_PREFIX);
+}
+
+/** Tolak penulisan ke disk sementara di Vercel — lebih baik error jelas daripada data hilang diam-diam. */
+function assertPersistentWrite() {
+  if (IS_VERCEL && !hasAnyDatabase()) {
+    throw new Error(
+      'Penyimpanan permanen belum aktif: DATABASE_URL (Neon) belum diisi di Environment Variables Vercel. ' +
+      'Perubahan TIDAK disimpan karena disk Vercel bersifat sementara.'
+    );
+  }
+}
+
 // Re-export agar router/script lain cukup import dari './lib/db.js'
 export {
  initPool,
@@ -173,7 +202,7 @@ function persistCloudCache(force = false) {
 
 /** Ingat satu key (dipanggil setelah getStore/setStore berhasil ke Neon). */
 function rememberKey(key, data) {
- if (key === '__db_pool_state' || key === '__db_migration_history' || key === CROSS_BACKUP_KEY || key === SLOT_CONFIG_KEY) return;
+ if (isInternalKey(key)) return;
  const cache = loadCloudCache();
  cache.data[key] = data;
  persistCloudCache(false);
@@ -301,6 +330,7 @@ export async function getStoreUpdatedAt(key) {
 
 export async function setStore(key, data) {
  if (!hasDatabaseUrl()) {
+ assertPersistentWrite();
  const localDb = readLocalStore();
  localDb[key] = data;
  writeLocalStore(localDb);
@@ -331,6 +361,73 @@ export async function setStore(key, data) {
  `Gagal menyimpan data ke database (kemungkinan kuota terlampaui). Perubahan BELUM tersimpan — coba lagi beberapa saat lagi. Detail teknis: ${err.message}`
  );
  }
+
+ // Snapshot berkala (dibatasi interval) untuk data inti. Tidak pernah melempar error.
+ if (key === 'main_db' || key === 'users_db') {
+ await createDbSnapshot({ reason: 'otomatis-setelah-perubahan' });
+ }
+}
+
+/**
+ * Buat snapshot SELURUH data (kecuali key internal) dan simpan PERMANEN di Neon
+ * sebagai key `__snapshot_<waktu>`. Hanya SNAPSHOT_KEEP terbaru yang dipertahankan.
+ * - force=false → dilewati bila snapshot terakhir lebih muda dari SNAPSHOT_MIN_INTERVAL_MS.
+ * - Tidak pernah melempar error (return null bila gagal/dilewati).
+ */
+export async function createDbSnapshot({ reason = 'otomatis', force = false } = {}) {
+ if (!hasDatabaseUrl()) return null;
+ try {
+ return await withDb(async (sql) => {
+ await sql`
+ CREATE TABLE IF NOT EXISTS app_store (
+ key TEXT PRIMARY KEY,
+ data JSONB NOT NULL,
+ updated_at TIMESTAMPTZ DEFAULT NOW()
+ )
+ `;
+ if (!force) {
+ const last = await sql`
+ SELECT updated_at FROM app_store
+ WHERE starts_with(key, ${SNAPSHOT_PREFIX})
+ ORDER BY key DESC LIMIT 1
+ `;
+ if (last[0]) {
+ const age = Date.now() - new Date(last[0].updated_at).getTime();
+ if (age < SNAPSHOT_MIN_INTERVAL_MS) return null;
+ }
+ }
+
+ const rows = await sql`SELECT key, data FROM app_store WHERE NOT starts_with(key, ${SNAPSHOT_PREFIX})`;
+ const data = {};
+ for (const row of rows) {
+ if (isInternalKey(row.key)) continue;
+ data[row.key] = row.data;
+ }
+
+ const createdAt = new Date().toISOString();
+ const snapKey = SNAPSHOT_PREFIX + createdAt.replace(/[:.]/g, '-');
+ const payload = JSON.stringify({ meta: { createdAt, reason, keyCount: Object.keys(data).length }, data });
+ await sql`
+ INSERT INTO app_store (key, data, updated_at)
+ VALUES (${snapKey}, ${payload}, NOW())
+ ON CONFLICT (key) DO UPDATE SET data = ${payload}, updated_at = NOW()
+ `;
+
+ // Pangkas snapshot lama (key berurutan waktu, jadi urut abjad = urut waktu)
+ const old = await sql`
+ SELECT key FROM app_store
+ WHERE starts_with(key, ${SNAPSHOT_PREFIX})
+ ORDER BY key DESC OFFSET ${SNAPSHOT_KEEP}
+ `;
+ for (const row of old) {
+ await sql`DELETE FROM app_store WHERE key = ${row.key}`;
+ }
+ return { key: snapKey, createdAt, reason, keyCount: Object.keys(data).length };
+ });
+ } catch (err) {
+ console.warn('[DB Snapshot] Gagal membuat snapshot:', err.message);
+ return null;
+ }
 }
 
 /**
@@ -346,7 +443,7 @@ export async function getAllStoreData() {
  const result = {};
  for (const row of rows) {
  // Key internal pool tidak ikut diekspor ke file backup pengguna
- if (row.key === '__db_pool_state' || row.key === '__db_migration_history' || row.key === CROSS_BACKUP_KEY || row.key === SLOT_CONFIG_KEY) continue;
+ if (isInternalKey(row.key)) continue;
  result[row.key] = row.data;
  }
  return result;
@@ -383,12 +480,13 @@ export async function restoreAllStoreData(fullData) {
  throw new Error('Data backup tidak valid.');
  }
  if (!hasDatabaseUrl()) {
+ assertPersistentWrite();
  writeLocalStore(fullData);
  return true;
  }
  return withDb(async (sql) => {
  for (const [key, data] of Object.entries(fullData)) {
- if (key === '__db_pool_state' || key === CROSS_BACKUP_KEY || key === SLOT_CONFIG_KEY) continue; // jangan timpa state pool / cadangan lintas-slot
+ if (key === '__db_pool_state' || key === CROSS_BACKUP_KEY || key === SLOT_CONFIG_KEY || String(key).startsWith(SNAPSHOT_PREFIX)) continue; // jangan timpa state pool / cadangan lintas-slot / snapshot
  const json = JSON.stringify(data);
  await sql`
  INSERT INTO app_store (key, data, updated_at)
@@ -401,8 +499,53 @@ export async function restoreAllStoreData(fullData) {
  });
 }
 
-/** Daftar file snapshot lokal (mencakup snapshot rutin & cadangan migrasi). */
-export function getBackupSnapshotsList() {
+/**
+ * Baca isi satu snapshot dari Neon berdasarkan nama file yang tampil di UI
+ * (mis. "snapshot_2026-10-08T06-59-00-000Z.json").
+ * Return { meta, data } atau null bila tidak ditemukan / nama tidak valid.
+ */
+export async function readDbSnapshot(filename) {
+ if (!hasDatabaseUrl()) return null;
+ const name = String(filename || '');
+ if (!/^snapshot_[0-9TZ-]+\.json$/.test(name)) return null;
+ const key = `__${name.replace(/\.json$/, '')}`;
+ return withDb(async (sql) => {
+ const rows = await sql`SELECT data FROM app_store WHERE key = ${key}`;
+ const snap = rows[0]?.data;
+ if (!snap || typeof snap !== 'object' || !snap.data || typeof snap.data !== 'object') return null;
+ return { meta: snap.meta || {}, data: snap.data };
+ });
+}
+
+/**
+ * Daftar snapshot backup.
+ * - Mode Neon: dibaca dari database (PERMANEN, bertahan walau server restart).
+ * - Mode file lokal (dev, tanpa DATABASE_URL): dibaca dari disk.
+ * Bentuk keluaran tetap { filename, kind, size, createdAt } agar UI tidak berubah.
+ */
+export async function getBackupSnapshotsList() {
+ if (hasDatabaseUrl()) {
+ try {
+ return await withDb(async (sql) => {
+ const rows = await sql`
+ SELECT key, updated_at, octet_length(data::text) AS size
+ FROM app_store
+ WHERE starts_with(key, ${SNAPSHOT_PREFIX})
+ ORDER BY key DESC LIMIT 50
+ `;
+ return rows.map(r => ({
+ filename: `${String(r.key).slice(2)}.json`,
+ kind: 'snapshot',
+ size: Number(r.size) || 0,
+ createdAt: r.updated_at
+ }));
+ });
+ } catch {
+ return [];
+ }
+ }
+ if (IS_VERCEL) return [];
+
  try {
  ensureDirectories();
  const migrationDir = path.join(localDataDir, 'migrations');
@@ -410,7 +553,7 @@ export function getBackupSnapshotsList() {
 
  const collect = (dir, kind) => {
  if (!fs.existsSync(dir)) return;
- for (const filename of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
+ for (const filename of fs.readdirSync(dir).filter(f => f.endsWith('.json') && f !== 'cloud_last_backup.json')) {
  const stat = fs.statSync(path.join(dir, filename));
  entries.push({ filename, kind, size: stat.size, createdAt: stat.birthtime || stat.mtime });
  }

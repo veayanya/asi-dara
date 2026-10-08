@@ -3,7 +3,7 @@
 
 import express from 'express';
 import { requireAuth, requireRole } from '../auth/authMiddleware.js';
-import { getAllStoreData, restoreAllStoreData, getBackupSnapshotsList, getStore, setStore, getActiveStorageInfo } from '../lib/db.js';
+import { getAllStoreData, restoreAllStoreData, getBackupSnapshotsList, createDbSnapshot, readDbSnapshot, getStore, setStore, getActiveStorageInfo } from '../lib/db.js';
 import { logActivity } from '../utils/activityLogger.js';
 import { realtimeHub } from '../utils/realtimeHub.js';
 
@@ -147,6 +147,7 @@ router.post('/restore', requireAuth, async (req, res) => {
  if (Array.isArray(backupPayload.data?.main_db?.rkis)) {
  backupPayload.data.main_db.rkis = sortRkisNewestFirst(backupPayload.data.main_db.rkis);
  }
+ await createDbSnapshot({ reason: 'sebelum-restore', force: true }); // jaring pengaman: data lama bisa dikembalikan
  await restoreAllStoreData(backupPayload.data);
  } else {
  // User biasa: hanya boleh merge RKA miliknya sendiri
@@ -170,6 +171,7 @@ router.post('/restore', requireAuth, async (req, res) => {
  idMap.set(rki.id, { ...rki, userId: req.user.id }); // pastikan kepemilikan tetap benar
  }
  mainDb.rkis = sortRkisNewestFirst(Array.from(idMap.values()));
+ await createDbSnapshot({ reason: 'sebelum-restore', force: true }); // jaring pengaman: data lama bisa dikembalikan
  await restoreAllStoreData({ main_db: mainDb });
  }
 
@@ -193,6 +195,46 @@ router.post('/restore', requireAuth, async (req, res) => {
  } catch (err) {
  console.error('Restore error:', err);
  res.status(500).json({ error: 'Gagal memulihkan database: ' + err.message });
+ }
+});
+
+/**
+ * 3a. Pulihkan dari SNAPSHOT di database (khusus Admin).
+ * Body: { filename } — nama snapshot yang tampil di tabel "Riwayat Snapshot".
+ * Urutan penting: isi snapshot dibaca DULU, baru snapshot pengaman dibuat
+ * (pembuatan snapshot baru bisa memangkas snapshot terlama, termasuk yang
+ * sedang dipulihkan). Data saat ini tetap bisa dikembalikan lewat snapshot
+ * "sebelum-restore-snapshot" itu.
+ */
+router.post('/restore-snapshot', requireAuth, requireRole('admin'), async (req, res) => {
+ try {
+ const filename = String(req.body?.filename || '');
+ const snap = await readDbSnapshot(filename);
+ if (!snap) {
+ return res.status(404).json({ error: 'Snapshot tidak ditemukan (mungkin sudah terhapus karena batas jumlah snapshot).' });
+ }
+
+ const safety = await createDbSnapshot({ reason: 'sebelum-restore-snapshot', force: true });
+ await restoreAllStoreData(snap.data);
+
+ realtimeHub.broadcast('ARSIP_SYNC', { reason: 'restore-snapshot', at: new Date().toISOString() });
+
+ await logActivity({
+ req,
+ action: 'RESTORE_BACKUP',
+ target: 'Database Restored dari Snapshot',
+ details: `Pemulihan dari snapshot ${filename} (dibuat ${snap.meta?.createdAt || 'tidak diketahui'}) oleh ${req.user.username}`
+ });
+
+ res.json({
+ success: true,
+ message: 'Database berhasil dipulihkan dari snapshot.' + (safety ? ' Kondisi sebelum pemulihan tersimpan sebagai snapshot baru.' : ''),
+ snapshotCreatedAt: snap.meta?.createdAt || null,
+ restoredAt: new Date().toISOString()
+ });
+ } catch (err) {
+ console.error('Restore snapshot error:', err);
+ res.status(500).json({ error: 'Gagal memulihkan dari snapshot: ' + err.message });
  }
 });
 
@@ -282,7 +324,7 @@ router.get('/stats', requireAuth, requireRole('admin', 'moderator'), async (req,
  const mainDb = await getStore('main_db') || { rkis: [], ssh_databases: [] };
  const usersDb = await getStore('users_db') || { users: [] };
  const logsDb = await getStore('activity_logs') || { logs: [] };
- const snapshots = getBackupSnapshotsList();
+ const snapshots = await getBackupSnapshotsList();
  const storage = await getActiveStorageInfo();
 
  res.json({

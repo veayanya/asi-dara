@@ -318,7 +318,7 @@
  <div>
  <strong>Sistem Penyimpanan Permanen &amp; Perlindungan Data</strong>
  <p>
- Database Sintra tersimpan secara permanen dan otomatis di-backup setiap kali terjadi perubahan data.
+ Database Sintra tersimpan permanen di Neon. Snapshot otomatis juga disimpan di database (berkala, harian, dan sebelum setiap pemulihan), sehingga tidak hilang walau server restart.
  Sebagai <strong>Administrator</strong>, Anda memiliki hak penuh untuk mengekspor database lengkap dan melakukan pemulihan (*restore*).
  </p>
  </div>
@@ -486,11 +486,12 @@
  <th>Ukuran</th>
  <th>Waktu Dibuat</th>
  <th>Status</th>
+ <th>Aksi</th>
  </tr>
  </thead>
  <tbody>
  <tr v-if="snapshotsList.length === 0">
- <td colspan="4" class="no-data">Belum ada snapshot otomatis lokal.</td>
+ <td colspan="5" class="no-data">Belum ada snapshot di database.</td>
  </tr>
  <tr v-for="snap in snapshotsList" :key="snap.filename">
  <td><code class="snapshot-filename">{{ snap.filename }}</code></td>
@@ -500,6 +501,17 @@
  <span class="snapshot-badge-ok">
  <i data-lucide="check-circle" style="width:12px;height:12px;"></i> Tersimpan
  </span>
+ </td>
+ <td>
+ <button
+ v-if="snap.kind === 'snapshot' && /^snapshot_/.test(snap.filename)"
+ class="btn-snapshot-restore"
+ :disabled="!!restoringSnapshot"
+ @click="restoreFromSnapshot(snap)"
+ >
+ <i :data-lucide="restoringSnapshot === snap.filename ? 'loader-2' : 'rotate-ccw'" :class="{ 'spin-anim': restoringSnapshot === snap.filename }" style="width:12px;height:12px;"></i>
+ {{ restoringSnapshot === snap.filename ? 'Memulihkan...' : 'Pulihkan' }}
+ </button>
  </td>
  </tr>
  </tbody>
@@ -1483,6 +1495,7 @@ function setQuickFilter(action, status) {
 // Backup State
 const downloadingBackup = ref(false);
 const restoringBackup = ref(false);
+const restoringSnapshot = ref(null); // filename snapshot yang sedang dipulihkan
 const selectedBackupFile = ref(null);
 const fileInputRef = ref(null);
 
@@ -1741,6 +1754,32 @@ function handleFileSelected(e) {
  const file = e.target.files?.[0];
  if (file) {
  selectedBackupFile.value = file;
+ }
+}
+
+async function restoreFromSnapshot(snap) {
+ if (restoringSnapshot.value) return;
+ const waktu = formatDate(snap.createdAt);
+ if (!confirm(`Pulihkan database ke kondisi snapshot "${snap.filename}" (${waktu})?\n\nData saat ini akan ditimpa oleh isi snapshot. Kondisi sebelum pemulihan otomatis disimpan sebagai snapshot baru, jadi masih bisa dikembalikan.`)) return;
+
+ restoringSnapshot.value = snap.filename;
+ try {
+ const res = await apiFetch('/api/v1/backup/restore-snapshot', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ filename: snap.filename }),
+ timeoutMs: 120000
+ });
+ const result = await res.json().catch(() => ({}));
+ if (!res.ok || result.error) throw new Error(result.error || `Server menjawab ${res.status}.`);
+ showNotification('Pemulihan Berhasil', result.message || 'Database berhasil dipulihkan dari snapshot.', 'success');
+ await Promise.all([loadStats(), loadBackupStats(), loadLogs(), loadUsers()]);
+ } catch (err) {
+ const msg = err?.name === 'AbortError' ? 'Server tidak merespons (waktu habis). Coba lagi beberapa saat lagi.' : err.message;
+ showNotification('Gagal Memulihkan dari Snapshot', msg, 'danger');
+ } finally {
+ restoringSnapshot.value = null;
+ refreshIcons();
  }
 }
 
@@ -3145,6 +3184,22 @@ onMounted(async () => {
  font-size: 0.78rem;
  color: var(--primary-color);
 }
+
+.btn-snapshot-restore {
+ display: inline-flex;
+ align-items: center;
+ gap: 5px;
+ padding: 4px 10px;
+ border: 1px solid #3b82f6;
+ border-radius: 6px;
+ background: rgba(59,130,246,0.08);
+ color: #3b82f6;
+ font-size: 0.75rem;
+ font-weight: 700;
+ cursor: pointer;
+}
+.btn-snapshot-restore:hover:not(:disabled) { background: #3b82f6; color: #fff; }
+.btn-snapshot-restore:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .snapshot-badge-ok {
  display: inline-flex;

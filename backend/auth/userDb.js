@@ -266,9 +266,17 @@ export async function verifyAndLogin(username, password) {
  const isValid = await bcrypt.compare(password, user.password);
  if (!isValid) return null;
 
- // Update lastLogin
- user.lastLogin = new Date().toISOString();
- await writeUsersDb(db);
+ // Update lastLogin pada data TERBARU (bukan salinan lama yang dibaca sebelum bcrypt.compare),
+ // supaya login tidak menimpa/menghidupkan kembali perubahan admin (hapus/ubah user) yang
+ // terjadi bersamaan.
+ const lastLogin = new Date().toISOString();
+ const fresh = await readUsersDb();
+ const target = fresh.users.find(u => u.id === user.id);
+ if (target) {
+ target.lastLogin = lastLogin;
+ await writeUsersDb(fresh);
+ }
+ user.lastLogin = lastLogin;
 
  const { password: _, ...safeUser } = user;
  return safeUser;

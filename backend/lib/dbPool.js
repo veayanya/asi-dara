@@ -1135,6 +1135,12 @@ async function persistManagedConfig(cfg) {
  const json = JSON.stringify(cfg);
  const anchors = readEnvSlotConfig().slice(0, CONFIG_ANCHOR_FANOUT);
 
+ // Di Vercel disk bersifat sementara: tanpa database jangkar (DATABASE_URL), konfigurasi
+ // hanya akan tertulis ke /tmp lalu HILANG saat server restart. Tolak dengan pesan jelas.
+ if (anchors.length === 0 && process.env.VERCEL) {
+ throw httpError(500, 'Konfigurasi slot tidak bisa disimpan permanen: DATABASE_URL (jangkar) belum diisi di Environment Variables Vercel. Isi minimal satu DATABASE_URL lalu redeploy, kemudian ulangi perubahan.');
+ }
+
  const results = await Promise.allSettled(anchors.map(async (item) => {
  const sql = neon(item.url);
  await withTimeout((async () => {

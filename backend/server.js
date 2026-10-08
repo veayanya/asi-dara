@@ -27,7 +27,7 @@ import dbSlotsRouter from './routes/dbSlotsRouter.js';
 import settingsRouter from './routes/settingsRouter.js';
 import laporanRouter from './routes/laporanRouter.js';
 import aibotRouter from './routes/aibotRouter.js';
-import { getStore, setStore, getStoreUpdatedAt, checkDbConnection, initPool, startQuotaMonitor, checkQuotaAndRotate, getPoolStatus, isServingFallbackData, getFallbackBackupInfo } from './lib/db.js';
+import { getStore, setStore, createDbSnapshot, getStoreUpdatedAt, checkDbConnection, initPool, startQuotaMonitor, checkQuotaAndRotate, getPoolStatus, isServingFallbackData, getFallbackBackupInfo } from './lib/db.js';
 import { logActivity, getActivityLogs, clearActivityLogs } from './utils/activityLogger.js';
 import { realtimeHub } from './utils/realtimeHub.js';
 import { startStorageOptimizer, runStorageOptimizer, getOptimizerStats } from './utils/storageOptimizer.js';
@@ -150,7 +150,8 @@ app.get('/api/cron/maintenance', async (req, res) => {
     await bootstrap();
     const quota = await checkQuotaAndRotate().catch((e) => ({ error: e.message }));
     await runStorageOptimizer().catch((e) => console.warn('[Cron] Optimizer:', e.message));
-    res.json({ success: true, quota });
+    const snapshot = await createDbSnapshot({ reason: 'cron-harian' });
+    res.json({ success: true, quota, snapshot: snapshot ? snapshot.key : null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
