@@ -889,7 +889,8 @@ PENTING: Output HARUS berupa JSON valid murni SAJA — JANGAN tambahkan kalimat 
 // Ekstraksi PDF kadang menghasilkan blok teks panjang yang terulang persis
 // (mis. isi halaman yang sama tertulis 3x). Blok duplikat dibuang agar tidak
 // memakan batas 30.000 karakter konteks AI dan tidak mengacaukan analisis.
-const RKA_SOURCE_TEXT_MAX = 30000;
+const RKA_SOURCE_TEXT_MAX = 300000; // dinaikkan dari 30.000 agar dokumen dengan hingga 100 Kegiatan/Sub Kegiatan tidak terpotong
+const RKA_PROMPT_TEXT_MAX = 300000;
 const RKA_RAW_FIELDS = ['sourceText', '_rawText', 'rawPdfText', 'rawText', 'originalText', 'extractedText'];
 
 function cleanRkaText(input) {
@@ -1044,7 +1045,7 @@ Tugas Anda adalah melakukan audit atas dokumen RKA (Rencana Kerja dan Anggaran) 
 
 Lakukan Analisis terhadap teks dokumen RKA di bawah ini:
 <TEKS_RKA>
-${text.substring(0, 30000) /* batasi agar tidak melebihi context limit wajar */}
+${text.substring(0, RKA_PROMPT_TEXT_MAX) /* batas aman context; cukup untuk dokumen panjang */}
 </TEKS_RKA>
 
 STANDAR SATUAN HARGA (SSH) TERBARU YANG WAJIB DIGUNAKAN SEBAGAI ACUAN VALIDASI:
@@ -1097,7 +1098,8 @@ Instruksi Ekstraksi & Penalaran Tambahan:
  - Total nilai_dikurangi harus sama atau setara dengan total nilai_ditambah.
 5. Ekstraksi Anggaran per Tahun (anggaran_tahunan): Ekstrak setiap baris { "tahun": <angka tahun>, "jumlah": <angka rupiah tanpa titik> } dan tentukan "tahun_rencana". Nilai "pagu" HARUS SAMA dengan "jumlah" pada tahun_rencana.
 6. Ekstraksi Indikator & Tolok Ukur Kinerja (indikator_kinerja): Ekstrak baris Tujuan (Ultimate), Sasaran (Intermediate), Program (Immediate), Kegiatan (Immediate), Sub Kegiatan (Output), Kelompok Sasaran. { "level": "...", "tolok_ukur": "...", "target": "..." }.
-   RINCIAN OUTPUT (WAJIB untuk baris "Sub Kegiatan (Output)"): tambahkan properti "rincian": [ { "nama": "...", "isi": "..." } ] yang menjabarkan SESEDETAIL MUNGKIN isi dari target output tersebut. Contoh: bila target "2 Laporan", buat 2 item — tiap item memuat nama laporan/dokumen (mis. jenis rapat/konsultasi, periode, pihak terkait) dan "isi" berupa komponen/uraian yang membentuknya. Ambil HANYA dari teks dokumen (uraian Sub Kegiatan, keterangan/spesifikasi pada rincian belanja, nama rekening & komponen belanja yang terkait). Jumlah item sebaiknya sama dengan angka target bila dokumen memungkinkan. DILARANG mengarang nama, tanggal, atau angka yang tidak ada di dokumen; bila dokumen tidak merinci, isi "isi" dengan "Tidak dirinci pada dokumen". Baris level lain tidak perlu "rincian".
+   BACA SEMUA KEGIATAN & SUB KEGIATAN (WAJIB): dokumen dapat memuat hingga 100 Kegiatan dan hingga 100 Sub Kegiatan. Telusuri SELURUH teks dari awal sampai akhir dan buat SATU baris indikator_kinerja untuk SETIAP Kegiatan (Immediate) dan SETIAP Sub Kegiatan (Output) yang tertulis, sesuai urutan di dokumen. DILARANG menggabungkan, meringkas, memilih sebagian, atau berhenti di tengah; bila ada lebih dari 100, ambil 100 pertama untuk masing-masing level.
+   RINCIAN ISI (WAJIB untuk baris "Kegiatan (Immediate)" DAN "Sub Kegiatan (Output)"): tambahkan properti "rincian": [ { "nama": "...", "isi": "..." } ] yang memuat SEMUA rincian yang tertulis di dokumen untuk kegiatan/sub kegiatan tersebut — jangan dipotong, dibatasi jumlahnya, atau diringkas. Contoh: bila target "2 Laporan", buat item untuk tiap laporan/dokumen yang disebut (mis. jenis rapat/konsultasi, periode, pihak terkait) dan "isi" berupa komponen/uraian yang membentuknya; bila dokumen menyebut lebih banyak rincian daripada angka target, tetap tulis semuanya. Ambil HANYA dari teks dokumen (uraian Kegiatan/Sub Kegiatan, keterangan/spesifikasi pada rincian belanja, nama rekening & komponen belanja yang terkait). DILARANG mengarang nama, tanggal, atau angka yang tidak ada di dokumen; bila dokumen tidak merinci, isi "isi" dengan "Tidak dirinci pada dokumen". Baris level lain (Tujuan, Sasaran, Program, Kelompok Sasaran) tidak perlu "rincian".
 7. Analisis Kesesuaian Anggaran Tahun Berjalan vs Target Kinerja (analisis_kesesuaian_anggaran): Objek { "status": "Sesuai" | "Perlu Perhatian" | "Tidak Sesuai", "penjelasan": "...", "estimasi_biaya_per_output": "...", "proyeksi_pencapaian_target": "Target Kemungkinan Tercapai" | "Berisiko Tidak Tercapai" | "Diproyeksikan Tidak Tercapai", "alasan_proyeksi_target": "..." }.
 8. Ekstraksi tambahan: "lokasi" dan "sumber_dana".
 9. Evaluasi 6 Aspek Efisiensi & Efektivitas RKA (evaluasi_rka): efisiensi_alokasi, distribusi_rpd, kepatuhan_ssh_sbm, efisiensi_realisasi_kinerja, efektivitas_aktual, potensi_inefektivitas.
@@ -1161,7 +1163,7 @@ PENTING: Output Anda HARUS murni berupa valid JSON SAJA tanpa markdown \`\`\`jso
  { "level": "Tujuan (Ultimate)", "tolok_ukur": "Indeks Kualitas Kebijakan", "target": "85 Persen" },
  { "level": "Sasaran (Intermediate)", "tolok_ukur": "Persentase Capaian Sasaran", "target": "96 Persen" },
  { "level": "Program (Immediate)", "tolok_ukur": "Persentase Ketercapaian Program", "target": "96 Persen" },
- { "level": "Kegiatan (Immediate)", "tolok_ukur": "Jumlah Laporan Kegiatan", "target": "2 Jenis" },
+ { "level": "Kegiatan (Immediate)", "tolok_ukur": "Jumlah Laporan Kegiatan", "target": "2 Jenis", "rincian": [ { "nama": "Jenis 1 — <nama dari dokumen>", "isi": "<uraian dari dokumen>" }, { "nama": "Jenis 2 — <nama dari dokumen>", "isi": "<uraian dari dokumen>" } ] },
  { "level": "Sub Kegiatan (Output)", "tolok_ukur": "Jumlah Dokumen Output", "target": "2 Laporan", "rincian": [ { "nama": "Laporan 1 — <nama laporan dari dokumen>", "isi": "<komponen/uraian dari dokumen>" }, { "nama": "Laporan 2 — <nama laporan dari dokumen>", "isi": "<komponen/uraian dari dokumen>" } ] },
  { "level": "Kelompok Sasaran", "tolok_ukur": "-", "target": "Kelompok sasaran program" }
  ],

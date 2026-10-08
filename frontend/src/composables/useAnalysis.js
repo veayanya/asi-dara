@@ -5,6 +5,11 @@ import { useRealtime } from './useRealtime';
 import { downloadAnalysisHtmlReport } from '@/utils/htmlReportGenerator';
 import { downloadHtmlBackup } from '@/utils/htmlBackupGenerator';
 
+
+// Batas halaman PDF yang dibaca. Dokumen RKA dengan banyak Kegiatan/Sub Kegiatan (hingga 100)
+// bisa sangat panjang, jadi batas lama 25 halaman dinaikkan agar seluruh isi terbaca.
+const MAX_PDF_PAGES = 300;
+
 const defaultRkis = [];
 const realtime = useRealtime();
 
@@ -1524,7 +1529,7 @@ async function handleRkaFiles(files) {
       updateProgressBar(30, `Mengekstrak data teks ${f + 1}/${validFiles.length}...`, queueItem);
       const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
       let textContent = "";
-      let maxPages = Math.min(pdf.numPages, 25);
+      let maxPages = Math.min(pdf.numPages, MAX_PDF_PAGES);
 
       for (let i = 1; i <= maxPages; i++) {
         const page = await pdf.getPage(i);
@@ -2271,7 +2276,7 @@ async function reanalyzeDocWithPdf(targetId, file, onProgress = () => { }) {
   onProgress(30, "Mengekstrak teks dokumen PDF...");
   const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
   let textContent = "";
-  let maxPages = Math.min(pdf.numPages, 25);
+  let maxPages = Math.min(pdf.numPages, MAX_PDF_PAGES);
 
   for (let i = 1; i <= maxPages; i++) {
     const page = await pdf.getPage(i);

@@ -82,6 +82,13 @@ const CANDIDATE_MODELS = [
  * Try generating content with a single API key
  * across all candidate models.
  */
+// Dokumen panjang (banyak Kegiatan/Sub Kegiatan) butuh waktu lebih lama untuk dibaca & dijawab.
+// Dasar 30 dtk, ditambah 1 dtk tiap 2.000 karakter prompt, maksimal 100 dtk per percobaan.
+function timeoutForPrompt(prompt) {
+ const len = String(prompt || '').length;
+ return Math.min(100000, 30000 + Math.ceil(len / 2000) * 1000);
+}
+
 async function tryKeyWithModels(apiKey, prompt) {
  const genAI = new GoogleGenerativeAI(apiKey);
  let lastErr = null;
@@ -105,7 +112,7 @@ async function tryKeyWithModels(apiKey, prompt) {
  new Promise((_, rej) =>
  setTimeout(
  () => rej(new Error(`Timeout model ${modelName}`)),
- 30000
+ timeoutForPrompt(prompt)
  )
  )
  ]);
