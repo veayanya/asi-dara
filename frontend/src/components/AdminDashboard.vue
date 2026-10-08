@@ -850,6 +850,11 @@
  </div>
  </div>
 
+ <!-- ── TAB: DATABASE NEON (slot 1–100, satu-satu & massal) ───────────── -->
+ <div v-if="activeTab === 'neon-db'" class="admin-content">
+ <NeonSlotsPanel />
+ </div>
+
  <!-- ── TAB: KONTROL MENU ─────────────────────────────────────────────── -->
  <div v-if="activeTab === 'menu-control'" class="admin-content">
  <div class="api-config-info-banner">
@@ -1290,6 +1295,7 @@ import { useRealtime } from '@/composables/useRealtime';
 import { usePersistedRef } from '@/composables/usePersistedRef';
 import { extractBackupFromHtml } from '@/utils/htmlDataExtractor';
 import { createZipBlob, downloadBlob } from '@/utils/zipStore';
+import NeonSlotsPanel from '@/components/NeonSlotsPanel.vue';
 
 const { currentUser, downloadFullBackupHtml, downloadFullBackupJson, restoreDatabase, importBackupMerge, showNotification, menuConfig, saveMenuConfig } = useAnalysis();
 
@@ -1323,6 +1329,7 @@ const allTabs = [
  { id: 'backup', label: 'Backup & Pemulihan', icon: 'archive', roles: ['admin'] },
  { id: 'users', label: 'Manajemen User', icon: 'users', roles: ['admin'] },
  { id: 'api', label: 'Konfigurasi API', icon: 'key-round', roles: ['admin'] },
+ { id: 'neon-db', label: 'Database Neon', icon: 'database', roles: ['admin'] },
  { id: 'menu-control', label: 'Kontrol Menu', icon: 'sliders-horizontal', roles: ['admin'] },
  { id: 'reports', label: 'Laporan Masuk', icon: 'inbox', roles: ['admin'] },
  { id: 'settings', label: 'Pengaturan Kontak', icon: 'contact', roles: ['admin'] }

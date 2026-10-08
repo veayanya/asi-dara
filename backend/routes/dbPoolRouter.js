@@ -13,6 +13,8 @@ import {
  measureUsage,
  formatBytes,
  getActiveSlotIndex,
+ getActiveSlotNumber,
+ slotIndexByNumber,
  readSlotConfig,
  maskUrl,
  MAX_SLOTS,
@@ -53,7 +55,7 @@ router.get('/usage', requireAuth, requireRole('admin', 'moderator'), async (req,
  const usage = await measureUsage(index, { force: true });
  res.json({
  mode: 'neon_multi',
- activeSlot: index + 1,
+ activeSlot: getActiveSlotNumber() ?? index + 1,
  totalSlots: configured.length,
  maxSlots: MAX_SLOTS,
  usedBytes: usage.bytes,
@@ -157,10 +159,12 @@ router.post('/check', requireAuth, requireRole('admin'), async (req, res) => {
 router.post('/failover', requireAuth, requireRole('admin'), async (req, res) => {
  try {
  const { targetSlot, reason } = req.body || {};
- const targetIndex = Number.isInteger(targetSlot) ? targetSlot - 1 : null;
-
- if (targetIndex !== null && (targetIndex < 0 || targetIndex >= MAX_SLOTS)) {
- return res.status(400).json({ error: `targetSlot harus antara 1 dan ${MAX_SLOTS}.` });
+ let targetIndex = null;
+ if (targetSlot !== undefined && targetSlot !== null) {
+ targetIndex = Number.isInteger(targetSlot) ? slotIndexByNumber(targetSlot) : -1;
+ if (targetIndex < 0) {
+ return res.status(400).json({ error: `targetSlot ${targetSlot} tidak terdaftar / tidak aktif di pool.` });
+ }
  }
 
  const record = await rotateToNextSlot(reason || `Manual oleh ${req.user.username}`, targetIndex);
@@ -213,8 +217,8 @@ router.get('/slots', requireAuth, requireRole('admin'), (req, res) => {
  total: configured.length,
  maxSlots: MAX_SLOTS,
  slots: configured.map((item, i) => ({
- slot: i + 1,
- label: i === 0 ? 'Primary' : `Backup-${i}`,
+ slot: item.number ?? i + 1,
+ label: item.label || (i === 0 ? 'Primary' : `Backup-${(item.number ?? i + 1) - 1}`),
  connection: maskUrl(item.url),
  envVar: item.envVar
  }))

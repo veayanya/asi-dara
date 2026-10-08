@@ -31,7 +31,9 @@ import {
  registerFallbackDataProvider,
  writeCrossSlotBackup,
  readCrossSlotBackup,
- CROSS_BACKUP_KEY
+ CROSS_BACKUP_KEY,
+ SLOT_CONFIG_KEY,
+ getActiveSlotNumber
 } from './dbPool.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -171,7 +173,7 @@ function persistCloudCache(force = false) {
 
 /** Ingat satu key (dipanggil setelah getStore/setStore berhasil ke Neon). */
 function rememberKey(key, data) {
- if (key === '__db_pool_state' || key === '__db_migration_history' || key === CROSS_BACKUP_KEY) return;
+ if (key === '__db_pool_state' || key === '__db_migration_history' || key === CROSS_BACKUP_KEY || key === SLOT_CONFIG_KEY) return;
  const cache = loadCloudCache();
  cache.data[key] = data;
  persistCloudCache(false);
@@ -344,7 +346,7 @@ export async function getAllStoreData() {
  const result = {};
  for (const row of rows) {
  // Key internal pool tidak ikut diekspor ke file backup pengguna
- if (row.key === '__db_pool_state' || row.key === '__db_migration_history' || row.key === CROSS_BACKUP_KEY) continue;
+ if (row.key === '__db_pool_state' || row.key === '__db_migration_history' || row.key === CROSS_BACKUP_KEY || row.key === SLOT_CONFIG_KEY) continue;
  result[row.key] = row.data;
  }
  return result;
@@ -386,7 +388,7 @@ export async function restoreAllStoreData(fullData) {
  }
  return withDb(async (sql) => {
  for (const [key, data] of Object.entries(fullData)) {
- if (key === '__db_pool_state' || key === CROSS_BACKUP_KEY) continue; // jangan timpa state pool / cadangan lintas-slot
+ if (key === '__db_pool_state' || key === CROSS_BACKUP_KEY || key === SLOT_CONFIG_KEY) continue; // jangan timpa state pool / cadangan lintas-slot
  const json = JSON.stringify(data);
  await sql`
  INSERT INTO app_store (key, data, updated_at)
@@ -434,7 +436,7 @@ export async function getActiveStorageInfo() {
  const usage = await measureUsage(idx);
  return {
  type: 'Neon PostgreSQL (Multi-DB Failover)',
- slot: idx + 1,
+ slot: getActiveSlotNumber() ?? idx + 1,
  usedBytes: usage.bytes,
  usedLabel: formatBytes(usage.bytes),
  quotaLabel: formatBytes(usage.quotaBytes),

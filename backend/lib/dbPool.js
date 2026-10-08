@@ -83,6 +83,28 @@ let failoverInFlight = null; // Promise — mencegah failover paralel
 const events = []; // log ringkas untuk endpoint status
 const usageCache = new Map(); // index → { bytes, ratio, checkedAt }
 
+// ─── Konfigurasi slot yang dikelola lewat panel Admin ──────────────────────
+// Slot ENV (DATABASE_URL, DATABASE_URL_n, DATABASE_URLS, DATABASE_URLS_FILE)
+// tetap menjadi "jangkar" dan menempati nomor 1..N. Panel Admin mengelola
+// nomor di atasnya sampai PANEL_MAX_SLOTS (100). Konfigurasi panel disimpan
+// di tabel app_store pada beberapa database jangkar (key SLOT_CONFIG_KEY) +
+// file lokal sebagai cadangan, dan TIDAK ikut dalam backup / migrasi data
+// karena berisi kredensial.
+export const SLOT_CONFIG_KEY = '__db_slots_config';
+export const PANEL_MAX_SLOTS = 100;
+const SLOT_CONFIG_FILE = path.join(dataDir, 'db_slots_config.json');
+const CONFIG_ANCHOR_FANOUT = 5; // jumlah database ENV pertama tempat config dibaca/ditulis
+const ALLOW_ANY_HOST = String(process.env.DB_ALLOW_NON_NEON_HOSTS || '').toLowerCase() === 'true';
+const ALLOWED_HOST_SUFFIXES = (process.env.DB_ALLOWED_HOST_SUFFIXES || '.neon.tech')
+ .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+let managedConfig = { version: 0, updatedAt: null, slots: [] };
+let configMutex = Promise.resolve();
+
+/** Nomor slot yang ditampilkan (stabil walau ada nomor yang kosong). */
+function numOf(index) {
+ return slots[index]?.number ?? index + 1;
+}
+
 // ─── Cadangan aplikasi (fallback terakhir) ─────────────────────────────────
 // lib/db.js mendaftarkan sebuah "provider" yang mengembalikan salinan data
 // terakhir yang berhasil dibaca/ditulis (disimpan di disk lokal). Ini dipakai
@@ -152,7 +174,7 @@ export async function readCrossSlotBackup() {
  const rows = await sql`SELECT data FROM app_store WHERE key = ${CROSS_BACKUP_KEY}`;
  const payload = rows[0]?.data;
  if (payload && payload.data && Object.keys(payload.data).length > 0) {
- return { savedAt: payload.savedAt, data: payload.data, foundAtSlot: i + 1 };
+ return { savedAt: payload.savedAt, data: payload.data, foundAtSlot: numOf(i) };
  }
  } catch {
  // Slot ini juga tidak bisa dibaca — lanjut coba slot berikutnya.
@@ -235,7 +257,7 @@ export function formatBytes(bytes) {
  *
  * Total slot yang dipakai tetap dibatasi oleh MAX_SLOTS (DB_MAX_SLOTS).
  */
-export function readSlotConfig() {
+export function readEnvSlotConfig() {
  const raw = [];
 
  if (process.env.DATABASE_URL?.trim()) {
@@ -302,23 +324,51 @@ export function readSlotConfig() {
  pushEvent('warn', `Konfigurasi memiliki ${raw.length} URL; hanya ${MAX_SLOTS} slot pertama yang digunakan.`);
  }
 
+ unique.forEach((item, i) => { item.number = i + 1; });
  return unique;
+}
+
+/**
+ * Konfigurasi slot final = slot ENV (nomor 1..N) + slot panel Admin yang aktif
+ * (nomor > N, urut naik). Slot panel yang bentrok nomor/URL dengan ENV dilewati.
+ */
+export function readSlotConfig() {
+ const env = readEnvSlotConfig();
+ const merged = env.slice();
+ const envCount = env.length;
+ const seen = new Set(env.map(item => fingerprint(item.url)));
+
+ for (const m of managedConfig.slots) {
+ if (merged.length >= MAX_SLOTS) break;
+ if (m.enabled === false) continue;
+ if (m.number <= envCount) continue;
+ const fp = fingerprint(m.url);
+ if (seen.has(fp)) continue;
+ seen.add(fp);
+ merged.push({ url: m.url, envVar: 'PANEL', number: m.number, label: m.label || null, note: m.note || '', managed: true });
+ }
+ return merged;
 }
 
 function buildSlots() {
  const configs = readSlotConfig();
+ const previous = new Map(slots.map(sl => [sl.url, sl]));
  slots.length = 0;
  configs.forEach((item, i) => {
+ const prev = previous.get(item.url);
+ const number = item.number ?? i + 1;
  slots.push({
  index: i,
+ number,
  url: item.url,
- label: i === 0 ? 'Primary' : `Backup-${i}`,
+ label: item.label || (i === 0 ? 'Primary' : `Backup-${number - 1}`),
  host: hostOf(item.url),
  envVar: item.envVar,
- client: null,
- healthy: null,
- lastError: null,
- lastCheckedAt: null
+ source: item.managed ? 'panel' : 'env',
+ client: prev?.client ?? null,
+ healthy: prev?.healthy ?? null,
+ lastError: prev?.lastError ?? null,
+ lastCheckedAt: prev?.lastCheckedAt ?? null
  });
  });
  return slots;
@@ -432,12 +482,13 @@ async function writePoolState(index, state) {
  * memilih yang punya `generation` tertinggi. Ini membuat pool tetap konsisten
  * setelah restart/redeploy walaupun disk Render dihapus.
  */
-export async function initPool({ force = false } = {}) {
+export async function initPool({ force = false, skipConfigLoad = false } = {}) {
  if (initialized && !force) return getPoolStatusSync();
  if (initPromise && !force) return initPromise;
 
  initPromise = (async () => {
  ensureDirs();
+ if (!skipConfigLoad) await loadManagedConfig();
  buildSlots();
 
  if (slots.length === 0) {
@@ -465,7 +516,7 @@ export async function initPool({ force = false } = {}) {
  } catch (err) {
  slot.healthy = false;
  slot.lastError = err.message;
- pushEvent('warn', `Slot #${slot.index + 1} (${slot.host}) tidak dapat dihubungi: ${err.message}`);
+ pushEvent('warn', `Slot #${numOf(slot.index)} (${slot.host}) tidak dapat dihubungi: ${err.message}`);
  }
  }));
  }
@@ -487,13 +538,13 @@ export async function initPool({ force = false } = {}) {
  since: new Date().toISOString()
  });
  } catch (err) {
- pushEvent('error', `Gagal menulis state awal pada slot #${activeIndex + 1}: ${err.message}`);
+ pushEvent('error', `Gagal menulis state awal pada slot #${numOf(activeIndex)}: ${err.message}`);
  }
  }
 
  initialized = true;
  pushEvent('info',
- `Pool siap — ${slots.length} slot terdaftar, aktif: slot #${activeIndex + 1} (${slots[activeIndex]?.host}), generation ${generation}.`
+ `Pool siap — ${slots.length} slot terdaftar, aktif: slot #${numOf(activeIndex)} (${slots[activeIndex]?.host}), generation ${generation}.`
  );
  return getPoolStatusSync();
  })();
@@ -524,7 +575,7 @@ export async function withDb(fn, { attempt = 0 } = {}) {
  throw err;
  }
 
- pushEvent('warn', `Kuota/limit terdeteksi pada slot #${activeIndex + 1}: ${err.message} → memulai failover.`);
+ pushEvent('warn', `Kuota/limit terdeteksi pada slot #${numOf(activeIndex)}: ${err.message} → memulai failover.`);
  await rotateToNextSlot(`Error kuota: ${err.message}`);
  return withDb(fn, { attempt: attempt + 1 });
  }
@@ -539,6 +590,7 @@ async function dumpAll(index) {
  for (const row of rows) {
  if (row.key === STATE_KEY) continue; // state pool tidak ikut dipindah mentah
  if (row.key === CROSS_BACKUP_KEY) continue; // blob cadangan lintas-slot, bukan data pengguna
+ if (row.key === SLOT_CONFIG_KEY) continue; // konfigurasi slot berisi kredensial, dikelola terpisah
  dump[row.key] = row.data;
  }
  return dump;
@@ -652,14 +704,14 @@ async function findNextSlot(fromIndex) {
  const underQuota = healthy.find(c => c.ratio < 1);
  if (underQuota) { // Prioritas 2
  pushEvent('warn',
- `Tidak ada slot yang benar-benar lapang. Memilih slot #${underQuota.index + 1} ` +
+ `Tidak ada slot yang benar-benar lapang. Memilih slot #${numOf(underQuota.index)} ` +
  `yang paling kosong (${(underQuota.ratio * 100).toFixed(1)}%).`
  );
  return underQuota.index;
  }
 
  pushEvent('warn', // Prioritas 3
- `Semua slot cadangan sudah melewati kuota. Darurat: memakai slot #${healthy[0].index + 1} ` +
+ `Semua slot cadangan sudah melewati kuota. Darurat: memakai slot #${numOf(healthy[0].index)} ` +
  `(${(healthy[0].ratio * 100).toFixed(1)}%). Segera tambah database baru.`
  );
  return healthy[0].index;
@@ -696,7 +748,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  throw new Error('Slot tujuan sama dengan slot aktif.');
  }
 
- pushEvent('info', `Migrasi dimulai: slot #${fromIndex + 1} (${slots[fromIndex].host}) → slot #${target + 1} (${slots[target].host}). Alasan: ${reason}`);
+ pushEvent('info', `Migrasi dimulai: slot #${numOf(fromIndex)} (${slots[fromIndex].host}) → slot #${numOf(target)} (${slots[target].host}). Alasan: ${reason}`);
 
  // 1) CADANGKAN dari database aktif
  let dump = null;
@@ -747,8 +799,8 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  // pulih/direset, datanya masih ada di sana untuk dipulihkan manual.
  pushEvent('warn',
  `Tidak ada cadangan migrasi, cadangan aplikasi, maupun cadangan lintas-slot untuk dipindahkan. ` +
- `Melakukan cold-failover ke slot #${target + 1} tanpa membawa data lama ` +
- `(data lama tetap tersimpan di slot #${fromIndex + 1}, tidak hilang).`
+ `Melakukan cold-failover ke slot #${numOf(target)} tanpa membawa data lama ` +
+ `(data lama tetap tersimpan di slot #${numOf(fromIndex)}, tidak hilang).`
  );
  coldFailover = true;
  }
@@ -756,9 +808,9 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
 
  const meta = {
  reason,
- fromSlot: fromIndex + 1,
+ fromSlot: numOf(fromIndex),
  fromHost: slots[fromIndex].host,
- toSlot: target + 1,
+ toSlot: numOf(target),
  toHost: slots[target].host,
  keys: dump ? Object.keys(dump).length : 0,
  checksum: dump ? checksumOf(dump) : null,
@@ -784,7 +836,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  throw new Error(`Verifikasi migrasi gagal: ${verification.missing.slice(0, 5).join(', ') || 'checksum tidak cocok'}`);
  }
  } else {
- pushEvent('warn', `Slot #${target + 1} akan langsung dipakai sebagai slot aktif memakai data yang sudah ada di slot tersebut (jika ada), tanpa proses restore/verifikasi.`);
+ pushEvent('warn', `Slot #${numOf(target)} akan langsung dipakai sebagai slot aktif memakai data yang sudah ada di slot tersebut (jika ada), tanpa proses restore/verifikasi.`);
  }
 
  // 5) Pindahkan pointer aktif (generation naik)
@@ -795,7 +847,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  slotIndex: target,
  host: slots[target].host,
  since: new Date().toISOString(),
- migratedFrom: { slot: fromIndex + 1, host: slots[fromIndex].host },
+ migratedFrom: { slot: numOf(fromIndex), host: slots[fromIndex].host },
  reason
  };
  try {
@@ -805,7 +857,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  // bermasalah sesaat) membatalkan seluruh failover — tetap alihkan pointer
  // di memori supaya trafik berikutnya berhenti menabrak slot sumber yang
  // penuh. State akan ditulis ulang otomatis saat initPool berikutnya.
- pushEvent('warn', `Tidak dapat menulis state pool ke slot #${target + 1}: ${err.message} (pointer tetap dialihkan di memori).`);
+ pushEvent('warn', `Tidak dapat menulis state pool ke slot #${numOf(target)}: ${err.message} (pointer tetap dialihkan di memori).`);
  }
 
  // Tandai slot lama sebagai tidak aktif (best-effort — mungkin sudah penuh)
@@ -816,7 +868,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  slotIndex: fromIndex,
  host: slots[fromIndex].host,
  retiredAt: new Date().toISOString(),
- migratedTo: { slot: target + 1, host: slots[target].host },
+ migratedTo: { slot: numOf(target), host: slots[target].host },
  reason
  });
  } catch (err) {
@@ -840,7 +892,7 @@ export async function rotateToNextSlot(reason = 'Manual', targetIndex = null) {
  await appendMigrationHistory(target, record);
 
  pushEvent('info',
- `Migrasi SELESAI dalam ${record.durationMs} ms — ${written} key dipindah ke slot #${target + 1} (${slots[target].host}). Database aktif sekarang: slot #${target + 1}.`
+ `Migrasi SELESAI dalam ${record.durationMs} ms — ${written} key dipindah ke slot #${numOf(target)} (${slots[target].host}). Database aktif sekarang: slot #${numOf(target)}.`
  );
 
  return record;
@@ -908,7 +960,7 @@ export async function checkQuotaAndRotate() {
 
  if (usage.ratio >= QUOTA_THRESHOLD) {
  pushEvent('warn',
- `Slot #${activeIndex + 1} mencapai ${(usage.ratio * 100).toFixed(1)}% ` +
+ `Slot #${numOf(activeIndex)} mencapai ${(usage.ratio * 100).toFixed(1)}% ` +
  `(${formatBytes(usage.bytes)} / ${formatBytes(QUOTA_BYTES)}) — ambang ${(QUOTA_THRESHOLD * 100).toFixed(0)}%. Memulai failover otomatis.`
  );
  if (slots.length < 2) {
@@ -954,13 +1006,574 @@ export function stopQuotaMonitor() {
  }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PANEL ADMIN — Konfigurasi slot database Neon (nomor 1–100)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function httpError(status, message) {
+ const err = new Error(message);
+ err.status = status;
+ return err;
+}
+
+function cleanText(value, max) {
+ return typeof value === 'string'
+ ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max)
+ : '';
+}
+
+/** Hilangkan password dari pesan error sebelum dikirim ke UI. */
+function scrubSecret(message, url) {
+ let out = String(message || '');
+ try {
+ const pwd = decodeURIComponent(new URL(url).password || '');
+ if (pwd.length >= 4) out = out.split(pwd).join('****');
+ } catch {}
+ return out;
+}
+
+function withTimeout(promise, ms, message) {
+ let timer;
+ const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); });
+ return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Validasi satu connection string Neon.
+ * Host dibatasi ke *.neon.tech (atau DB_ALLOWED_HOST_SUFFIXES) agar server tidak
+ * bisa dipakai untuk menembak host sembarang (SSRF) lewat driver HTTP Neon.
+ */
+export function validateDbUrl(input) {
+ const raw = String(input ?? '').trim().replace(/^['"`]+|['"`]+$/g, '');
+ if (!raw) return { ok: false, error: 'URL kosong.' };
+
+ let u;
+ try { u = new URL(raw); } catch { return { ok: false, error: 'Format URL tidak valid.' }; }
+
+ if (u.protocol !== 'postgresql:' && u.protocol !== 'postgres:') {
+ return { ok: false, error: 'Harus diawali postgresql:// atau postgres://' };
+ }
+ if (!u.username || !u.password) {
+ return { ok: false, error: 'Username atau password tidak ada di URL.' };
+ }
+ const host = u.hostname.toLowerCase();
+ if (!host) return { ok: false, error: 'Host tidak ada di URL.' };
+
+ let database = '';
+ try { database = decodeURIComponent(u.pathname.replace(/^\//, '')); } catch { database = u.pathname.replace(/^\//, ''); }
+ if (!database) return { ok: false, error: 'Nama database tidak ada di URL (…/neondb).' };
+
+ if (!ALLOW_ANY_HOST && !ALLOWED_HOST_SUFFIXES.some(suffix => host.endsWith(suffix))) {
+ return { ok: false, error: `Host harus berakhiran ${ALLOWED_HOST_SUFFIXES.join(' / ')}.` };
+ }
+
+ const warnings = [];
+ if (!host.includes('-pooler')) {
+ warnings.push('Host tidak mengandung "-pooler". Disarankan memakai connection string Pooled dari Neon.');
+ }
+ return { ok: true, url: raw, host, database, warnings, fingerprint: fingerprint(raw) };
+}
+
+// ─── Persistensi konfigurasi panel ──────────────────────────────────────────
+function normalizeManagedConfig(raw) {
+ const input = Array.isArray(raw?.slots) ? raw.slots : [];
+ const used = new Set();
+ const out = [];
+ for (const item of input) {
+ const number = Number(item?.number);
+ const url = typeof item?.url === 'string' ? item.url.trim() : '';
+ if (!Number.isInteger(number) || number < 1 || number > PANEL_MAX_SLOTS || !url || used.has(number)) continue;
+ used.add(number);
+ out.push({
+ number,
+ url,
+ label: cleanText(item.label, 40),
+ note: cleanText(item.note, 200),
+ enabled: item.enabled !== false,
+ createdAt: item.createdAt || null,
+ updatedAt: item.updatedAt || null
+ });
+ }
+ out.sort((a, b) => a.number - b.number);
+ return {
+ version: Number.isInteger(raw?.version) && raw.version >= 0 ? raw.version : 0,
+ updatedAt: raw?.updatedAt || null,
+ slots: out
+ };
+}
+
+/** Baca konfigurasi panel dari file lokal + database jangkar ENV; ambil versi tertinggi. */
+async function loadManagedConfig() {
+ const found = [];
+ try {
+ if (fs.existsSync(SLOT_CONFIG_FILE)) {
+ found.push(normalizeManagedConfig(JSON.parse(fs.readFileSync(SLOT_CONFIG_FILE, 'utf-8'))));
+ }
+ } catch {}
+
+ const anchors = readEnvSlotConfig().slice(0, CONFIG_ANCHOR_FANOUT);
+ await Promise.all(anchors.map(async (item) => {
+ try {
+ const sql = neon(item.url);
+ const rows = await withTimeout(
+ sql`SELECT data FROM app_store WHERE key = ${SLOT_CONFIG_KEY}`,
+ 10_000, 'timeout membaca config slot'
+ );
+ if (rows[0]?.data) found.push(normalizeManagedConfig(rows[0].data));
+ } catch {
+ // tabel belum ada / database jangkar tidak terjangkau — lewati
+ }
+ }));
+
+ found.sort((a, b) => b.version - a.version);
+ managedConfig = found[0] || { version: 0, updatedAt: null, slots: [] };
+ return managedConfig;
+}
+
+/** Simpan konfigurasi panel ke database jangkar ENV + file lokal. */
+async function persistManagedConfig(cfg) {
+ const json = JSON.stringify(cfg);
+ const anchors = readEnvSlotConfig().slice(0, CONFIG_ANCHOR_FANOUT);
+
+ const results = await Promise.allSettled(anchors.map(async (item) => {
+ const sql = neon(item.url);
+ await withTimeout((async () => {
+ await sql`
+ CREATE TABLE IF NOT EXISTS app_store (
+ key TEXT PRIMARY KEY,
+ data JSONB NOT NULL,
+ updated_at TIMESTAMPTZ DEFAULT NOW()
+ )
+ `;
+ await sql`
+ INSERT INTO app_store (key, data, updated_at)
+ VALUES (${SLOT_CONFIG_KEY}, ${json}, NOW())
+ ON CONFLICT (key) DO UPDATE SET data = ${json}, updated_at = NOW()
+ `;
+ })(), 15_000, 'timeout menyimpan config slot');
+ }));
+ const dbOk = results.filter(r => r.status === 'fulfilled').length;
+
+ // Jika ada database jangkar tapi tak satu pun berhasil, batalkan SEBELUM menyentuh
+ // file lokal — kalau tidak, perubahan yang ditolak akan muncul lagi saat config dimuat ulang.
+ if (anchors.length > 0 && dbOk === 0) {
+ const first = results.find(r => r.status === 'rejected');
+ throw httpError(502, `Gagal menyimpan konfigurasi ke database ENV: ${scrubSecret(first?.reason?.message, anchors[0].url)}`);
+ }
+
+ let fileOk = false;
+ try {
+ ensureDirs();
+ fs.writeFileSync(SLOT_CONFIG_FILE, json, { encoding: 'utf-8', mode: 0o600 });
+ fileOk = true;
+ } catch {}
+
+ if (anchors.length === 0 && !fileOk) {
+ throw httpError(500, 'Gagal menyimpan konfigurasi: tidak ada database ENV dan file lokal tidak bisa ditulis.');
+ }
+ return { dbOk, dbTried: anchors.length, fileOk };
+}
+
+/** Terapkan konfigurasi panel terbaru ke pool yang sedang berjalan. */
+async function reloadSlots() {
+ const wasEmpty = slots.length === 0;
+ const activeUrl = slots[activeIndex]?.url ?? null;
+
+ buildSlots();
+ usageCache.clear();
+
+ if (slots.length === 0) {
+ initialized = true;
+ return;
+ }
+
+ const newActive = activeUrl ? slots.findIndex(sl => sl.url === activeUrl) : -1;
+ if (wasEmpty || newActive < 0) {
+ initialized = false;
+ initPromise = null;
+ await initPool({ force: true, skipConfigLoad: true });
+ } else {
+ activeIndex = newActive;
+ }
+ if (!process.env.VERCEL) startQuotaMonitor();
+}
+
+/** Samakan memori dengan versi config terbaru (untuk deploy multi-instance). */
+export async function syncManagedConfig() {
+ await initPool();
+ const before = managedConfig.version;
+ await loadManagedConfig();
+ if (managedConfig.version !== before) await reloadSlots();
+ return managedConfig;
+}
+
+/** Jalankan perubahan config secara serial, dengan cek versi (optimistic lock). */
+function mutateManagedConfig(mutator, { expectedVersion = null } = {}) {
+ const run = configMutex.then(async () => {
+ if (failoverInFlight) throw httpError(409, 'Migrasi/failover database sedang berjalan. Coba lagi setelah selesai.');
+ await initPool();
+ await loadManagedConfig();
+
+ if (expectedVersion !== null && expectedVersion !== undefined && Number(expectedVersion) !== managedConfig.version) {
+ throw httpError(409, 'Konfigurasi sudah diubah admin lain. Muat ulang panel lalu ulangi perubahan.');
+ }
+
+ const draft = JSON.parse(JSON.stringify(managedConfig));
+ const envList = readEnvSlotConfig();
+ const activeUrl = slots[activeIndex]?.url ?? null;
+ const result = await mutator(draft, { envList, activeUrl });
+
+ if (result?.changed === false) {
+ return { ...result, version: managedConfig.version, persisted: null };
+ }
+
+ const next = normalizeManagedConfig(draft);
+ next.version = managedConfig.version + 1;
+ next.updatedAt = new Date().toISOString();
+
+ const persisted = await persistManagedConfig(next);
+ managedConfig = next;
+ await reloadSlots();
+
+ pushEvent('info', `Konfigurasi slot via panel admin diperbarui (versi ${next.version}, ${next.slots.length} slot panel).`);
+ return { ...result, version: next.version, persisted };
+ });
+ configMutex = run.catch(() => {});
+ return run;
+}
+
+function findDuplicate(fp, draft, envList, exceptNumber = null) {
+ for (const item of envList) {
+ if (fingerprint(item.url) === fp) return item.number;
+ }
+ for (const m of draft.slots) {
+ if (m.number !== exceptNumber && fingerprint(m.url) === fp) return m.number;
+ }
+ return null;
+}
+
+function assertPanelNumber(value, envList) {
+ const n = Number(value);
+ if (!Number.isInteger(n) || n < 1 || n > PANEL_MAX_SLOTS) {
+ throw httpError(400, `Nomor slot harus bilangan bulat 1–${PANEL_MAX_SLOTS}.`);
+ }
+ if (n <= envList.length) {
+ throw httpError(409, `Slot ${n} dikunci karena berasal dari ENV (${envList[n - 1].envVar}). Ubah lewat environment variable.`);
+ }
+ return n;
+}
+
+// ─── Operasi satu slot ──────────────────────────────────────────────────────
+/** Tambah / ubah satu slot. url kosong pada slot yang sudah ada = URL tidak diubah. */
+export function upsertManagedSlot(number, fields = {}, { expectedVersion = null } = {}) {
+ return mutateManagedConfig(async (draft, { envList, activeUrl }) => {
+ const n = assertPanelNumber(number, envList);
+ const existing = draft.slots.find(s => s.number === n);
+ const now = new Date().toISOString();
+ const warnings = [];
+
+ let url = existing?.url || '';
+ const incoming = typeof fields.url === 'string' ? fields.url.trim() : '';
+ if (incoming) {
+ const v = validateDbUrl(incoming);
+ if (!v.ok) throw httpError(400, v.error);
+ const dup = findDuplicate(v.fingerprint, draft, envList, n);
+ if (dup) throw httpError(409, `Database ini sudah terdaftar di slot ${dup}. Tiap slot harus project/endpoint Neon yang berbeda.`);
+ if (existing && existing.url !== v.url && existing.url === activeUrl) {
+ throw httpError(409, `Slot ${n} sedang AKTIF dan tidak boleh diganti URL-nya. Lakukan failover ke slot lain dulu.`);
+ }
+ url = v.url;
+ warnings.push(...v.warnings);
+ }
+ if (!url) throw httpError(400, 'URL wajib diisi untuk slot baru.');
+
+ const enabled = fields.enabled === undefined ? (existing?.enabled ?? true) : !!fields.enabled;
+ if (!enabled && url === activeUrl) {
+ throw httpError(409, `Slot ${n} sedang AKTIF dan tidak boleh dinonaktifkan. Lakukan failover ke slot lain dulu.`);
+ }
+
+ const entry = {
+ number: n,
+ url,
+ label: fields.label === undefined ? (existing?.label || '') : cleanText(fields.label, 40),
+ note: fields.note === undefined ? (existing?.note || '') : cleanText(fields.note, 200),
+ enabled,
+ createdAt: existing?.createdAt || now,
+ updatedAt: now
+ };
+ draft.slots = draft.slots.filter(s => s.number !== n).concat(entry);
+ return { number: n, created: !existing, warnings };
+ }, { expectedVersion });
+}
+
+export function removeManagedSlot(number, { expectedVersion = null } = {}) {
+ return mutateManagedConfig(async (draft, { envList, activeUrl }) => {
+ const n = assertPanelNumber(number, envList);
+ const existing = draft.slots.find(s => s.number === n);
+ if (!existing) throw httpError(404, `Slot ${n} sudah kosong.`);
+ if (existing.url === activeUrl) {
+ throw httpError(409, `Slot ${n} sedang AKTIF dan tidak boleh dihapus. Lakukan failover ke slot lain dulu.`);
+ }
+ draft.slots = draft.slots.filter(s => s.number !== n);
+ return { number: n };
+ }, { expectedVersion });
+}
+
+// ─── Import massal (database_urls) ──────────────────────────────────────────
+const URL_PATTERN = /postgres(?:ql)?:\/\/[^\s'"`,;<>]+/gi;
+const BULK_MAX_LINES = 500;
+
+/** Pecah teks bebas (satu per baris, dipisah koma, JSON array, atau DATABASE_URLS=...). */
+export function parseBulkInput(text) {
+ const entries = [];
+ const lines = String(text ?? '').split(/\r?\n/);
+ if (lines.length > BULK_MAX_LINES) {
+ throw httpError(400, `Terlalu banyak baris (maks ${BULK_MAX_LINES}).`);
+ }
+ lines.forEach((line, i) => {
+ const trimmed = line.trim();
+ if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) return;
+ const matches = trimmed.match(URL_PATTERN);
+ if (!matches) {
+ // sisa JSON / kurung / koma tunggal bukan error
+ if (/^[\[\]{}(),;'"`\s]*$/.test(trimmed)) return;
+ entries.push({ line: i + 1, raw: trimmed.slice(0, 50), error: 'Bukan connection string PostgreSQL.' });
+ return;
+ }
+ matches.forEach(m => entries.push({ line: i + 1, raw: m }));
+ });
+ return entries;
+}
+
+/**
+ * Rencana import (murni, tanpa efek samping). Dipakai untuk pratinjau dan eksekusi.
+ * mode: 'fill'    → isi nomor kosong terendah (default), slot yang ada dibiarkan
+ *       'replace' → hapus semua slot panel (kecuali yang AKTIF) lalu isi ulang
+ */
+function planBulkImport(draft, envList, activeUrl, text, { mode = 'fill', startAt = null, labelPrefix = '' } = {}) {
+ if (mode !== 'fill' && mode !== 'replace') throw httpError(400, 'mode harus "fill" atau "replace".');
+ const entries = parseBulkInput(text);
+ if (entries.length === 0) throw httpError(400, 'Tidak ada connection string yang ditemukan di teks.');
+
+ const firstFree = Math.max(envList.length + 1, Number.isInteger(Number(startAt)) && Number(startAt) > 0 ? Number(startAt) : 1);
+ const now = new Date().toISOString();
+ const removed = [];
+ let slotsOut = draft.slots.slice();
+
+ if (mode === 'replace') {
+ slotsOut = slotsOut.filter(s => {
+ const keep = s.url === activeUrl;
+ if (!keep) removed.push(s.number);
+ return keep;
+ });
+ }
+
+ const occupied = new Set(slotsOut.map(s => s.number));
+ const seen = new Map();
+ envList.forEach(item => seen.set(fingerprint(item.url), item.number));
+ slotsOut.forEach(s => seen.set(fingerprint(s.url), s.number));
+
+ const nextFree = () => {
+ for (let n = firstFree; n <= PANEL_MAX_SLOTS; n++) if (!occupied.has(n)) return n;
+ return null;
+ };
+
+ const prefix = cleanText(labelPrefix, 30);
+ const results = [];
+ for (const entry of entries) {
+ if (entry.error) { results.push({ line: entry.line, status: 'invalid', message: entry.error, preview: entry.raw }); continue; }
+ const v = validateDbUrl(entry.raw);
+ if (!v.ok) { results.push({ line: entry.line, status: 'invalid', message: v.error, preview: maskUrl(entry.raw) }); continue; }
+ if (seen.has(v.fingerprint)) {
+ results.push({ line: entry.line, status: 'duplicate', slot: seen.get(v.fingerprint), host: v.host, message: `Sudah terdaftar di slot ${seen.get(v.fingerprint)}.` });
+ continue;
+ }
+ const n = nextFree();
+ if (n === null) {
+ results.push({ line: entry.line, status: 'full', host: v.host, message: `Slot 1–${PANEL_MAX_SLOTS} penuh.` });
+ continue;
+ }
+ occupied.add(n);
+ seen.set(v.fingerprint, n);
+ slotsOut.push({
+ number: n, url: v.url, label: prefix ? `${prefix}-${n}` : '', note: '',
+ enabled: true, createdAt: now, updatedAt: now
+ });
+ results.push({ line: entry.line, status: 'added', slot: n, host: v.host, connection: maskUrl(v.url), warnings: v.warnings });
+ }
+
+ const count = (st) => results.filter(r => r.status === st).length;
+ return {
+ slots: slotsOut,
+ removed,
+ results,
+ summary: {
+ total: results.length,
+ added: count('added'),
+ duplicate: count('duplicate'),
+ invalid: count('invalid'),
+ full: count('full'),
+ removed: removed.length
+ }
+ };
+}
+
+/** Pratinjau import massal — tidak mengubah apa pun. */
+export async function previewBulkImport(text, options = {}) {
+ await syncManagedConfig();
+ const envList = readEnvSlotConfig();
+ const activeUrl = slots[activeIndex]?.url ?? null;
+ const plan = planBulkImport(managedConfig, envList, activeUrl, text, options);
+ return { dryRun: true, version: managedConfig.version, summary: plan.summary, results: plan.results, removed: plan.removed };
+}
+
+/** Terapkan import massal. */
+export function applyBulkImport(text, { expectedVersion = null, ...options } = {}) {
+ return mutateManagedConfig(async (draft, { envList, activeUrl }) => {
+ const plan = planBulkImport(draft, envList, activeUrl, text, options);
+ if (plan.summary.added === 0 && plan.summary.removed === 0) {
+ return { changed: false, dryRun: false, summary: plan.summary, results: plan.results, removed: plan.removed };
+ }
+ draft.slots = plan.slots;
+ return { dryRun: false, summary: plan.summary, results: plan.results, removed: plan.removed };
+ }, { expectedVersion });
+}
+
+// ─── Tes koneksi ────────────────────────────────────────────────────────────
+/** Uji satu connection string (tidak disimpan). */
+export async function testDbUrl(url, { timeoutMs = 12_000 } = {}) {
+ const v = validateDbUrl(url);
+ if (!v.ok) return { ok: false, error: v.error };
+
+ const started = Date.now();
+ try {
+ const sql = neon(v.url);
+ const rows = await withTimeout(sql`
+ SELECT current_database() AS db,
+ pg_database_size(current_database())::bigint AS bytes,
+ to_regclass('public.app_store') IS NOT NULL AS has_store
+ `, timeoutMs, `Timeout ${Math.round(timeoutMs / 1000)} detik — compute Neon mungkin sedang bangun, coba lagi.`);
+ const bytes = Number(rows[0]?.bytes || 0);
+ return {
+ ok: true,
+ host: v.host,
+ database: rows[0]?.db,
+ latencyMs: Date.now() - started,
+ usedBytes: bytes,
+ usedLabel: formatBytes(bytes),
+ usagePercent: QUOTA_BYTES > 0 ? Number(((bytes / QUOTA_BYTES) * 100).toFixed(1)) : 0,
+ hasAppStore: !!rows[0]?.has_store,
+ warnings: v.warnings
+ };
+ } catch (err) {
+ return { ok: false, host: v.host, latencyMs: Date.now() - started, error: scrubSecret(err.message, v.url), warnings: v.warnings };
+ }
+}
+
+/** Cari URL slot (ENV atau panel, termasuk yang dinonaktifkan) berdasarkan nomor. */
+function urlForNumber(number) {
+ const n = Number(number);
+ const env = readEnvSlotConfig();
+ if (n >= 1 && n <= env.length) return env[n - 1].url;
+ return managedConfig.slots.find(s => s.number === n)?.url || null;
+}
+
+/** Tes beberapa slot tersimpan sekaligus (dibatasi concurrency) dan catat statusnya. */
+export async function testSlots(numbers, { concurrency = 8 } = {}) {
+ await syncManagedConfig();
+ const list = [...new Set((numbers || []).map(Number))].filter(n => Number.isInteger(n) && n >= 1 && n <= Math.max(MAX_SLOTS, PANEL_MAX_SLOTS));
+ const out = [];
+ for (let start = 0; start < list.length; start += concurrency) {
+ const batch = list.slice(start, start + concurrency);
+ const done = await Promise.all(batch.map(async (n) => {
+ const url = urlForNumber(n);
+ if (!url) return { slot: n, ok: false, empty: true, error: 'Slot kosong.' };
+ const res = await testDbUrl(url);
+ const live = slots.find(sl => sl.number === n);
+ if (live) {
+ live.healthy = res.ok;
+ live.lastError = res.ok ? null : res.error;
+ live.lastCheckedAt = new Date().toISOString();
+ }
+ return { slot: n, ...res };
+ }));
+ out.push(...done);
+ }
+ return out;
+}
+
+// ─── Tampilan untuk panel ───────────────────────────────────────────────────
+export function getActiveSlotNumber() {
+ return slots.length ? numOf(activeIndex) : null;
+}
+
+export function slotIndexByNumber(number) {
+ const n = Number(number);
+ return slots.findIndex(sl => sl.number === n);
+}
+
+/** Data grid slot 1–100 untuk panel Admin (URL selalu disamarkan). */
+export async function getSlotConfigView() {
+ await syncManagedConfig();
+ const env = readEnvSlotConfig();
+ const envCount = env.length;
+ const activeNum = getActiveSlotNumber();
+ const live = new Map(slots.map(sl => [sl.number, sl]));
+ const panel = new Map(managedConfig.slots.map(sl => [sl.number, sl]));
+
+ const grid = [];
+ for (let n = 1; n <= PANEL_MAX_SLOTS; n++) {
+ const liveSlot = live.get(n);
+ const health = {
+ healthy: liveSlot?.healthy ?? null,
+ lastError: liveSlot?.lastError ?? null,
+ lastCheckedAt: liveSlot?.lastCheckedAt ?? null
+ };
+
+ if (n <= envCount) {
+ const item = env[n - 1];
+ grid.push({
+ number: n, source: 'env', locked: true, envVar: item.envVar, enabled: true,
+ label: liveSlot?.label || (n === 1 ? 'Primary' : `Backup-${n - 1}`),
+ connection: maskUrl(item.url), host: hostOf(item.url),
+ active: n === activeNum, inPool: !!liveSlot, ...health
+ });
+ continue;
+ }
+
+ const m = panel.get(n);
+ if (!m) { grid.push({ number: n, source: 'empty', locked: false }); continue; }
+ grid.push({
+ number: n, source: 'panel', locked: false, enabled: m.enabled !== false,
+ label: m.label || '', note: m.note || '',
+ connection: maskUrl(m.url), host: hostOf(m.url),
+ active: n === activeNum, inPool: !!liveSlot,
+ createdAt: m.createdAt, updatedAt: m.updatedAt, ...health
+ });
+ }
+
+ return {
+ version: managedConfig.version,
+ updatedAt: managedConfig.updatedAt,
+ panelMax: PANEL_MAX_SLOTS,
+ maxSlots: MAX_SLOTS,
+ envCount,
+ envOverflow: Math.max(0, envCount - PANEL_MAX_SLOTS),
+ activeSlot: activeNum,
+ poolSlots: slots.length,
+ anchors: Math.min(envCount, CONFIG_ANCHOR_FANOUT),
+ hostRule: ALLOW_ANY_HOST ? null : ALLOWED_HOST_SUFFIXES,
+ slots: grid
+ };
+}
+
 // ─── Status ─────────────────────────────────────────────────────────────────
 function getPoolStatusSync() {
  return {
  mode: slots.length === 0 ? 'local_file_store' : 'neon_multi',
  totalSlots: slots.length,
  maxSlots: MAX_SLOTS,
- activeSlot: slots.length ? activeIndex + 1 : null,
+ activeSlot: slots.length ? numOf(activeIndex) : null,
  generation,
  quotaBytes: QUOTA_BYTES,
  quotaLabel: formatBytes(QUOTA_BYTES),
@@ -982,7 +1595,7 @@ export async function getPoolStatus({ probeAll = false } = {}) {
 
  async function describe(slot) {
  const info = {
- slot: slot.index + 1,
+ slot: numOf(slot.index),
  label: slot.label,
  host: slot.host,
  connection: maskUrl(slot.url),
