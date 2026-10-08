@@ -290,57 +290,61 @@ const TABS = [
 // Banner sistem. Ganti teks/tautan sesuai kebutuhan, mis. pengumuman pemeliharaan:
 //   text: 'Sistem ASI DARA sedang dalam pemeliharaan rutin. Sebagian menu mungkin tidak dapat diakses.'
 const BANNER = {
-  text: 'Pastikan dokumen RKA berformat PDF sebelum diunggah ke menu Unggah Berkas RKA. Simulasi Percakapan Agen AI juga menerima DOCX, XLSX, CSV, dan TXT.',
+  text: 'Pastikan dokumen RKA berformat PDF sebelum diunggah ke menu Unggah Berkas RKA. Untuk berkas XLSX, DOCX, CSV, TXT, atau JSON, gunakan menu Simulasi Percakapan Agen AI.',
   linkLabel: 'Lihat panduan unggah',
   article: 'unggah'
 };
 
 const REPORT_KINDS = [
   { name: 'Kendala Teknis', desc: 'Berkas gagal diunggah, halaman macet, atau data tidak muncul.' },
-  { name: 'Bug Aplikasi', desc: 'Tombol atau perhitungan yang tidak bekerja sebagaimana mestinya.' },
-  { name: 'Masukan & Saran', desc: 'Usulan fitur atau perbaikan tampilan.' },
-  { name: 'Permintaan Bantuan', desc: 'Meminta pengaktifan menu atau bimbingan penggunaan.' }
+  { name: 'Bug Aplikasi', desc: 'Tombol, perhitungan, atau tampilan yang tidak bekerja sebagaimana mestinya.' },
+  { name: 'Masukan & Saran', desc: 'Usulan fitur baru atau perbaikan antarmuka pengguna.' },
+  { name: 'Permintaan Bantuan', desc: 'Meminta pengaktifan menu nonaktif atau bimbingan penggunaan.' },
+  { name: 'Lainnya', desc: 'Pertanyaan atau laporan umum lainnya seputar sistem ASI DARA.' }
 ];
 
 const QUICK = [
-  { title: 'Unggah dokumen RKA', desc: 'Pilih berkas PDF di menu Unggah Berkas RKA dan tunggu antrean selesai.', cta: 'Buka Unggah Berkas RKA', tab: 'dashboard' },
-  { title: 'Baca hasil analisis', desc: 'Lihat Nilai Prakiraan Dampak, indikator dan target kinerja, serta rekomendasi belanja.', cta: 'Buka Hasil Analisis', tab: 'analyzer' },
-  { title: 'Perbaiki bila perlu', desc: 'Gunakan Edit Manual atau Edit dengan AI. Perubahan disimpan sebagai versi baru.', cta: 'Baca panduan edit', article: 'ubah' },
-  { title: 'Simpan dan unduh', desc: 'Kelola dokumen di Arsip Dokumen RKA, lalu unduh laporan HTML atau ekspor JSON.', cta: 'Buka Arsip Dokumen RKA', tab: 'history' }
+  { title: 'Periksa Dasbor Utama', desc: 'Lihat status kesiapan Gemini 2.5 Flash, jumlah arsip dokumen tersimpan, dan rata-rata kecepatan analisis.', cta: 'Buka Dasbor Utama', tab: 'main-dashboard' },
+  { title: 'Unggah dokumen RKA', desc: 'Pilih berkas PDF di menu Unggah Berkas RKA dan pantau pemrosesan antrean otomatis.', cta: 'Buka Unggah Berkas RKA', tab: 'dashboard' },
+  { title: 'Simulasi Percakapan Agen AI', desc: 'Gunakan 3 mode AI untuk evaluasi kepatuhan SBM, revisi DPA, atau konsultasi regulasi.', cta: 'Buka Agentic AI', tab: 'agentic-ai' },
+  { title: 'Baca hasil SROI & indikator', desc: 'Lihat Nilai Prakiraan Dampak, kesesuaian target kinerja, serta rekomendasi belanja.', cta: 'Buka Hasil Analisis', tab: 'analyzer' },
+  { title: 'Perbaiki & buat versi baru', desc: 'Gunakan Edit Manual, Edit dengan AI, atau Unggah Ulang PDF untuk memperbarui data.', cta: 'Baca panduan edit', article: 'ubah' },
+  { title: 'Simpan, ekspor & kelola', desc: 'Kelola arsip RKA, unduh laporan HTML/JSON, atau buka Dasbor Admin bagi Administrator.', cta: 'Buka Arsip Dokumen RKA', tab: 'history' }
 ];
 
 const ARTICLES = [
   {
     id: 'chatbot',
     sidebar: 'Mempelajari tentang fitur Simulasi Percakapan Agen AI',
-    title: 'Mempelajari Fitur Simulasi Percakapan Agen AI',
-    keywords: 'chatbot ai agen bot tanya jawab revisi regulasi permendagri ssh sbm dpa pagu rasionalisasi mode konsultasi',
+    title: 'Mempelajari Fitur Simulasi Percakapan Agen AI (BAPPERIDA AI-RKA)',
+    keywords: 'chatbot ai agen bot tanya jawab revisi regulasi permendagri ssh sbm dpa pagu rasionalisasi mode konsultasi docx xlsx json txt',
     intro: [
-      '**Simulasi Percakapan Agen AI** adalah asisten AI untuk perencanaan dan pengendalian anggaran daerah. Fitur ini punya tiga mode kerja yang dipilih lewat tab di bagian atas halamannya.',
-      'Anda dapat mengunggah dokumen RKA (PDF, DOCX, XLSX, CSV, atau TXT). Tombol **Contoh RKA** tersedia untuk mencoba tanpa berkas sendiri.'
+      '**Simulasi Percakapan Agen AI** adalah asisten AI interaktif untuk mengevaluasi RKA, merasionalisasi pagu, dan menanyakan aturan regulasi. Fitur ini memiliki tiga mode kerja yang dapat dipilih lewat tab di bagian atas.',
+      'Anda dapat mengunggah berbagai format dokumen (PDF, DOCX, XLSX, XLS, CSV, TXT, atau JSON) hingga **20 MB** per berkas. Tombol **Contoh RKA** tersedia untuk mencoba simulasi secara instan.'
     ],
     note: { text: 'AI hanya membantu menganalisis dan mengusulkan. Periksa kembali hasilnya dengan dokumen asli sebelum dipakai sebagai dasar keputusan anggaran.' },
     sections: [
       {
         title: 'Mode 1: Analis Evaluasi RKA',
-        body: ['Menguji kepatuhan terhadap SBM, efisiensi anggaran, dan Nilai Prakiraan Dampak TAPD.'],
-        steps: ['Buka menu **Simulasi Percakapan Agen AI**, lalu pilih tab **Mode 1: Analis Evaluasi RKA**.', 'Unggah dokumen RKA pada area unggah.', 'Jalankan analisis dan baca temuan yang ditampilkan.']
+        body: ['Menguji kepatuhan terhadap SBM, efisiensi anggaran per pos belanja, dan Nilai Prakiraan Dampak TAPD.'],
+        steps: ['Buka menu **Simulasi Percakapan Agen AI**, lalu pilih tab **Mode 1: Analis Evaluasi RKA**.', 'Unggah berkas RKA (PDF/XLSX/DOCX/TXT/JSON) atau tempel rincian anggaran.', 'Isi **Instruksi Tambahan Evaluasi** (opsional), lalu klik **Jalankan Evaluasi & Reviu RKA**.']
       },
       {
         title: 'Mode 2: Eksekutor Revisi RKA',
-        body: ['Membantu rasionalisasi pagu dan menyusun draf DPA baru dari dokumen RKA yang Anda unggah.'],
-        steps: ['Pilih tab **Mode 2: Eksekutor Revisi RKA**.', 'Unggah dokumen RKA yang akan direvisi.', 'Tinjau draf yang diusulkan sebelum Anda gunakan.']
+        body: ['Membantu rasionalisasi pagu, melakukan pemangkasan pos belanja inefisien, dan menyusun draf DPA baru.'],
+        steps: ['Pilih tab **Mode 2: Eksekutor Revisi RKA**.', 'Unggah atau tempel struktur RKA yang akan direvisi.', 'Ketik **Arahan Rasionalisasi**, misal *"Pangkas honorarium tim 50%"*, lalu klik **Eksekusi & Generate Revisi RKA**.', 'Gunakan ikon **Salin** (Markdown) atau **Cetak** (PDF) untuk mengekspor draf revisi.']
       },
       {
         title: 'Mode 3: Konsultasi Regulasi',
-        body: ['Tanya jawab seputar Permendagri 77 dan SSH. Tulis pertanyaan dalam bahasa sehari-hari, misalnya tentang aturan belanja tertentu.']
+        body: ['Tanya jawab interaktif seputar Permendagri 77, SIPD-RI, dan Standar Satuan Harga (SSH). Tulis pertanyaan dalam bahasa sehari-hari.']
       },
       {
-        title: 'Tips agar jawaban lebih tepat',
+        title: 'Tips agar jawaban AI lebih presisi',
         bullets: [
-          'Sebutkan nama sub kegiatan, OPD, dan tahun anggaran dalam pertanyaan.',
-          'Ajukan satu pertanyaan per pesan agar jawaban fokus.',
-          'Bila lencana status masih “Menghubungkan...”, tunggu 30 sampai 60 detik. Server dinyalakan ulang otomatis setelah lama tidak dipakai.'
+          'Sebutkan nama sub kegiatan, OPD, dan tahun anggaran secara spesifik.',
+          'Manfaatkan tombol pertanyaan cepat seperti **Geseran Belanja**, **Aturan SBM**, atau **Analisis Dampak**.',
+          'Jika lencana status masih "Menghubungkan...", tunggu 30-60 detik sampai menjadi **Server & AI Online**.',
+          'Gunakan tombol **Hapus Histori** jika ingin mengosongkan obrolan dan memulai sesi baru.'
         ]
       }
     ],
@@ -350,10 +354,10 @@ const ARTICLES = [
     id: 'unggah',
     sidebar: 'Cara mengunggah dan memproses dokumen RKA',
     title: 'Cara Mengunggah & Menganalisis Dokumen RKA di ASI DARA',
-    keywords: 'unggah upload pdf berkas dokumen rka analisis antrean proses hasil mulai',
+    keywords: 'unggah upload pdf berkas dokumen rka analisis antrean proses hasil mulai opd pagu otomatis',
     intro: [
       'Anda mengunggah dokumen RKA berformat PDF lewat menu **Unggah Berkas RKA**. ASI DARA membaca isi dokumen di browser Anda, lalu AI menyusun Analisis Valuasi Prakiraan Dampak Program (SROI). Beberapa berkas dapat dipilih sekaligus.',
-      'Hasilnya tersimpan di **Arsip Dokumen RKA** dan bisa dibuka kapan saja lewat menu **Hasil Analisis**.'
+      'Nama Perangkat Daerah (OPD) dan Pagu Anggaran dibaca secara otomatis dari isi dokumen.'
     ],
     note: {
       text: 'Beberapa langkah hanya berfungsi jika menu terkait aktif untuk akun Anda.',
@@ -361,34 +365,27 @@ const ARTICLES = [
     },
     sections: [
       {
-        title: 'Menyiapkan dokumen',
+        title: 'Menyiapkan dokumen RKA',
         steps: [
-          'Siapkan dokumen RKA/DPA SKPD Kabupaten Cirebon dalam format **PDF**. Format lain tidak diproses di menu ini.',
-          'Gunakan PDF asli yang teksnya dapat diseleksi, bukan foto atau hasil pindai.',
-          'Beri nama berkas yang mudah dikenali, misalnya memuat nama OPD dan sub kegiatan, agar mudah dicari di arsip.'
+          'Siapkan dokumen RKA/DPA SKPD Kabupaten Cirebon dalam format **PDF** (maksimal 100 MB per berkas).',
+          'Gunakan PDF digital asli yang teksnya dapat diseleksi, bukan foto atau hasil scan.',
+          'Untuk dokumen format Excel (XLSX) atau Word (DOCX), gunakan menu [[chatbot|Simulasi Percakapan Agen AI]].'
         ]
       },
       {
-        title: 'Mengunggah berkas',
+        title: 'Mengunggah & memantau antrean',
         steps: [
           'Buka menu **Unggah Berkas RKA** di sidebar.',
           'Klik **Pilih Dokumen RKA**, atau tarik berkas PDF ke area unggah.',
-          'Untuk beberapa dokumen, pilih semuanya sekaligus. Berkas masuk ke antrean pemrosesan.'
-        ]
-      },
-      {
-        title: 'Memantau proses analisis',
-        steps: [
-          'Setiap berkas menampilkan status dan persentase kemajuan pada antrean.',
-          'Jangan menutup atau memuat ulang halaman sampai antrean selesai, karena dokumen diproses di browser Anda.',
-          'Bila berkas gagal, notifikasi muncul di pojok kanan bawah layar. Lihat [[gagal|solusi jika dokumen gagal diunggah atau dianalisis]].'
+          'Setiap berkas menampilkan status dan persentase kemajuan pemrosesan.',
+          'Jangan menutup atau memuat ulang halaman sampai antrean selesai.'
         ]
       },
       {
         title: 'Membuka hasil analisis',
         steps: [
-          'Setelah antrean selesai, buka **Hasil Analisis**. Anda juga bisa memilih dokumen di **Arsip Dokumen RKA** lalu klik **Lihat Analisis**.',
-          'Halaman hasil memuat Nilai Prakiraan Dampak, indikator dan target kinerja, kesesuaian anggaran, serta rekomendasi belanja.'
+          'Setelah antrean selesai, buka **Hasil Analisis** atau klik **Lihat Analisis** pada **Arsip Dokumen RKA**.',
+          'Halaman hasil memuat Nilai Prakiraan Dampak (SROI), indikator dan target kinerja, kesesuaian anggaran, serta rekomendasi belanja.'
         ]
       }
     ],
@@ -396,6 +393,41 @@ const ARTICLES = [
       { label: 'Buka Unggah Berkas RKA', tab: 'dashboard' },
       { label: 'Buka Hasil Analisis', tab: 'analyzer' }
     ]
+  },
+  {
+    id: 'sroi',
+    sidebar: 'Memahami Rasio Nilai Prakiraan Dampak (SROI) & Rekomendasi Belanja',
+    title: 'Memahami Rasio Nilai Prakiraan Dampak (SROI) & Rekomendasi Belanja',
+    keywords: 'sroi nilai prakiraan dampak rasio layak cukup kurang deadweight attribution displacement drop off discount rate rekomendasi belanja efisien inefisien',
+    intro: [
+      '**Rasio Nilai Prakiraan Dampak (SROI)** mengukur perbandingan antara total nilai dampak sosial bersih yang dihasilkan dengan nilai pagu anggaran yang diinvestasikan pada subkegiatan tersebut.'
+    ],
+    note: { text: 'Angka rasio SROI memberikan gambaran efektivitas sosial anggaran untuk membantu pengambilan keputusan TAPD.' },
+    sections: [
+      {
+        title: 'Kriteria Status Rasio SROI',
+        bullets: [
+          '**Layak (\u2265 1,0 - Hijau):** Nilai dampak sosial yang dihasilkan melampaui besaran pagu anggaran.',
+          '**Cukup (0,6 \u2013 0,99 - Kuning):** Nilai dampak sosial mendekati nilai pagu anggaran.',
+          '**Kurang (< 0,6 - Merah):** Alokasi anggaran kurang efisien dalam menghasilkan dampak sosial.'
+        ]
+      },
+      {
+        title: '5 Faktor Penyesuaian Dampak Sosial',
+        bullets: [
+          '**Deadweight (Maks. 40%):** Persentase dampak yang akan tetap terjadi tanpa adanya kegiatan.',
+          '**Attribution:** Persentase dampak yang dihasilkan oleh kontribusi pihak/instansi lain.',
+          '**Displacement:** Persentase dampak yang menggeser atau menggantikan manfaat positif di tempat lain.',
+          '**Drop-off:** Persentase penurunan nilai manfaat dari waktu ke waktu.',
+          '**Discount Rate:** Suku bunga diskonto penyesuaian nilai uang dari waktu ke waktu.'
+        ]
+      },
+      {
+        title: 'Rekomendasi Komposisi Belanja',
+        body: ['Diagram lingkaran membandingkan struktur belanja sebelum dan sesudah optimasi. Tabel rincian rekening menandai status **Efisien** atau **Inefisien** beserta rekomendasi pengurangannya.']
+      }
+    ],
+    actions: [{ label: 'Buka Hasil Analisis', tab: 'analyzer' }]
   },
   {
     id: 'ubah',
@@ -415,7 +447,7 @@ const ARTICLES = [
         steps: [
           'Buka dokumen dari **Arsip Dokumen RKA** lalu klik **Lihat Analisis**.',
           'Klik **Edit Manual** di bagian atas halaman.',
-          'Pilih bagian yang akan diubah: Identitas & Pagu, Indikator & Target, Kesesuaian & Outcome, Analisis Komponen Belanja & Rekomendasi Belanja, atau Parameter Nilai Prakiraan Dampak.',
+          'Pilih bagian yang akan diubah: Identitas & Pagu, Indikator Kinerja, Komponen Belanja, atau Parameter SROI.',
           'Buka **Ringkasan & Simpan** untuk memeriksa perubahan, lalu simpan.'
         ]
       },
@@ -423,22 +455,21 @@ const ARTICLES = [
         title: 'Edit dengan AI',
         steps: [
           'Klik **Edit dengan AI**.',
-          'Tulis perubahan yang diinginkan (maksimal 2.000 karakter), misalnya menurunkan deadweight menjadi 20% dan memperjelas alasan pengurangan perjalanan dinas.',
+          'Tulis perubahan yang diinginkan (maksimal 2.000 karakter), misalnya *"Turunkan deadweight menjadi 20% dan pangkas perjalanan dinas"*.',
           'Pilih bagian yang boleh diubah AI.',
-          'Tinjau perbandingan sebelum dan sesudah. AI hanya mengusulkan; hasilnya disimpan setelah Anda menyetujui.'
+          'Tinjau perbandingan sebelum dan sesudah, lalu simpan hasil revisi AI.'
         ]
       },
       {
         title: 'Unggah Ulang PDF',
         steps: [
-          'Klik **Unggah Ulang PDF** untuk menganalisis ulang dokumen dari berkas PDF-nya.',
-          'Pilih berkas PDF (maksimal 25 MB). Hanya PDF yang didukung.'
-        ],
-        body: ['Cara ini juga berguna untuk dokumen lama yang belum memiliki data indikator kinerja.']
+          'Klik **Unggah Ulang PDF** untuk menganalisis ulang dokumen dari berkas PDF baru (maksimal 25 MB).',
+          'Cara ini sangat berguna untuk memperbarui analisis dari dokumen RKA revisi.'
+        ]
       },
       {
-        title: 'Memilih versi sebelumnya',
-        body: ['Jika dokumen memiliki lebih dari satu versi, pilihan **Versi** muncul di samping judul halaman hasil analisis. Pilih versi untuk melihat isinya.']
+        title: 'Pengelolaan Versi Dokumen',
+        body: ['Jika dokumen memiliki lebih dari satu versi, gunakan menu dropdown **Versi** di samping judul halaman untuk berpindah dan membandingkan iterasi analisis.']
       }
     ],
     actions: [{ label: 'Buka Arsip Dokumen RKA', tab: 'history' }]
@@ -449,7 +480,7 @@ const ARTICLES = [
     title: 'Mengunduh Laporan Hasil Analisis dan Ekspor JSON',
     keywords: 'unduh download laporan html json backup cadangan ekspor zip pemulihan arsip simpan',
     intro: [
-      'Laporan satu dokumen diunduh sebagai berkas **HTML** mandiri dengan tampilan yang sama seperti halaman analisis. Data mentah diekspor sebagai **JSON** dari halaman Arsip Dokumen RKA.'
+      'Laporan satu dokumen diunduh sebagai berkas **HTML** mandiri interaktif. Data mentah diekspor sebagai berkas **JSON** dari halaman Arsip Dokumen RKA.'
     ],
     note: { text: 'Berkas laporan dan JSON memuat seluruh data dokumen. Simpan dan bagikan hanya kepada pihak yang berwenang.' },
     sections: [
@@ -458,7 +489,7 @@ const ARTICLES = [
         steps: [
           'Buka dokumen dari **Arsip Dokumen RKA** dan klik **Lihat Analisis**.',
           'Klik **Unduh Laporan** di bagian atas halaman.',
-          'Tombol unduh (ikon panah ke bawah) juga tersedia pada setiap baris di daftar arsip.'
+          'Untuk konversi ke PDF, buka berkas HTML tersebut di browser lalu tekan **Ctrl+P \u2192 Simpan sebagai PDF**.'
         ]
       },
       {
@@ -466,15 +497,14 @@ const ARTICLES = [
         steps: [
           'Buka menu **Arsip Dokumen RKA**.',
           'Klik **Ekspor Full Database (JSON)**.',
-          'Akun pengguna mengunduh dokumen RKA miliknya beserta riwayat versi. Admin dan Moderator mengunduh database lengkap.'
+          'Akun pengguna mengunduh dokumen RKA miliknya, sedangkan Admin dan Moderator mengunduh database lengkap.'
         ]
       },
       {
-        title: 'Mengonversi berkas cadangan HTML ke JSON',
+        title: 'Backup & Pemulihan (Import/Export Zip & JSON)',
         steps: [
           'Di **Arsip Dokumen RKA**, klik **Backup & Pemulihan**.',
-          'Pada kartu **Konversi HTML ke JSON**, unggah satu atau beberapa berkas cadangan HTML (boleh tarik dan lepas).',
-          'Jika berkasnya lebih dari satu, hasil konversi diunduh dalam satu berkas ZIP.'
+          'Unggah berkas cadangan HTML/JSON/Zip untuk memulihkan atau menggabungkan data arsip.'
         ]
       }
     ],
@@ -486,40 +516,31 @@ const ARTICLES = [
     title: 'Solusi Jika Dokumen RKA Gagal Diunggah atau Dianalisis',
     keywords: 'gagal error tidak bisa macet lama loading server pdf ditolak memproses menyimpan api key gemini rusak kosong',
     intro: [
-      'Jika sebuah berkas gagal, antrean menampilkan status **Gagal memproses file** atau **Gagal menyimpan ke server**, dan sebuah notifikasi muncul di pojok kanan bawah layar. Coba langkah di bawah sesuai gejalanya.'
+      'Jika sebuah berkas gagal, antrean menampilkan status **Gagal memproses file** atau **Gagal menyimpan ke server**, dan notifikasi kesalahan akan muncul. Coba langkah berikut.'
     ],
     note: {
-      text: 'Catat nama berkas dan teks notifikasi kesalahan sebelum melapor. Informasi ini mempercepat penanganan.',
+      text: 'Catat nama berkas dan teks notifikasi kesalahan sebelum melapor.',
       link: { label: 'Pelajari cara menghubungi admin', article: 'admin' }
     },
     sections: [
       {
         title: 'Berkas tidak bisa dipilih atau ditolak',
         bullets: [
-          'Pastikan ekstensi berkas adalah **.pdf**. Berkas Word atau Excel tidak diterima di menu Unggah Berkas RKA.',
+          'Pastikan format berkas adalah **.pdf** di menu Unggah Berkas RKA (maksimal 100 MB).',
           'Untuk Unggah Ulang PDF, ukuran berkas maksimal 25 MB.',
-          'Gunakan PDF asli yang teksnya bisa diseleksi, bukan hasil pindai.'
+          'Gunakan PDF digital asli yang teksnya bisa diseleksi, bukan foto/scan.'
         ]
       },
       {
-        title: 'Muncul “Gagal memproses file”',
+        title: 'Pesan kesalahan API Key Gemini atau server timeout',
         bullets: [
-          'Buka PDF di aplikasi lain untuk memastikan berkasnya tidak rusak, lalu unggah lagi.',
-          'Coba unggah satu berkas saja, bukan banyak berkas sekaligus.',
-          'Jika pesan menyebut API Key Gemini, hubungi admin untuk memeriksa konfigurasi AI.'
+          'Jika muncul pesan mengenai API Key Gemini, hubungi Admin untuk memperbarui konfigurasi di Dasbor Admin.',
+          'Jika layar menampilkan "Menyiapkan Server…", tunggu 30-60 detik karena server dinyalakan ulang otomatis setelah tidak aktif.'
         ]
       },
       {
-        title: 'Muncul “Gagal menyimpan ke server”',
-        bullets: [
-          'Periksa koneksi internet Anda, lalu unggah ulang berkasnya.',
-          'Jika layar menampilkan “Menyiapkan Server…”, tunggu 30 sampai 60 detik. Server dinyalakan ulang otomatis setelah lama tidak dipakai.',
-          'Bila tetap gagal, kirim laporan ke admin.'
-        ]
-      },
-      {
-        title: 'Data indikator atau hasil analisis kosong',
-        body: ['Dokumen yang dianalisis sebelum fitur indikator kinerja ditambahkan tidak memiliki data tersebut. Buka dokumennya lalu klik **Unggah Ulang PDF** agar datanya diekstrak ulang.']
+        title: 'Data indikator atau SROI kosong',
+        body: ['Dokumen yang dianalisis sebelum fitur indikator kinerja ditambahkan dapat diperbarui dengan mengkliknya di Arsip lalu memilih **Unggah Ulang PDF**.']
       }
     ],
     actions: [{ label: 'Kirim laporan ke admin', tab: 'report' }]
@@ -530,31 +551,69 @@ const ARTICLES = [
     title: 'Memahami Indikator dan Target Kinerja pada Hasil Analisis',
     keywords: 'indikator target kinerja tolok ukur kesesuaian anggaran outcome output capaian level sasaran tujuan',
     intro: [
-      'Bagian **Indikator & Target Kinerja** pada halaman hasil analisis menampilkan tolok ukur dan target capaian yang tertulis di dokumen RKA/DPA. Bagian sesudahnya membandingkan target tersebut dengan anggaran.'
+      'Bagian **Indikator & Target Kinerja** pada halaman hasil analisis menampilkan tolok ukur dan target capaian dari dokumen RKA/DPA, disusul penilaian kecukupan anggaran.'
     ],
     sections: [
       {
-        title: 'Membaca kartu Target Kinerja per Indikator',
-        body: ['Setiap kartu memuat **level** indikator (Tujuan, Sasaran, Program, atau Kegiatan), **target** capaian, dan nama **tolok ukur** yang diukur.']
+        title: 'Membaca Target Kinerja per Indikator',
+        body: ['Setiap kartu merinci **level** indikator (Tujuan, Sasaran, Program, Kegiatan), **target** capaian, dan **tolok ukur** yang dinilai.']
       },
       {
-        title: 'Membaca kesesuaian anggaran',
-        body: ['Bagian **Analisis Kesesuaian Anggaran dengan Target Kinerja** menampilkan status kesesuaian anggaran tahun berjalan, penjelasannya, estimasi biaya per output, dan proyeksi pencapaian target.']
-      },
-      {
-        title: 'Jika data indikator belum tersedia',
-        steps: [
-          'Pesan “Data indikator kinerja & anggaran per tahun belum tersedia” berarti dokumen dianalisis sebelum fitur ini ada, atau tabel indikator tidak ditemukan di PDF.',
-          'Klik **Unggah Ulang PDF** agar datanya diekstrak ulang.',
-          'Jika tabelnya memang tidak ada di PDF, isi lewat **Edit Manual** pada bagian **Indikator & Target**.'
-        ]
+        title: 'Membaca Kesesuaian Anggaran',
+        body: ['Menampilkan status kesesuaian anggaran tahun berjalan, penjelasan proporsionalitas pagu, dan proyeksi pencapaian target.']
       },
       {
         title: 'Memperbaiki indikator yang keliru',
-        steps: ['Klik **Edit Manual** dan pilih **Indikator & Target**.', 'Koreksi level, tolok ukur, atau target, lalu simpan sebagai versi baru.']
+        steps: ['Klik **Edit Manual** pada bagian atas Hasil Analisis.', 'Pilih tab **Indikator Kinerja**, ubah data yang keliru, lalu simpan sebagai versi baru.']
       }
     ],
     actions: [{ label: 'Buka Hasil Analisis', tab: 'analyzer' }]
+  },
+  {
+    id: 'admin-menu',
+    sidebar: 'Panduan Dasbor Admin, Hak Akses & Monitoring Server',
+    title: 'Panduan Fitur Dasbor Admin, Manajemen User & Audit Trail',
+    keywords: 'admin dasbor audit storage failover rotasi 85 percent gemini api key neon postgresql user role password toggle menu sakelar',
+    intro: [
+      '**Dasbor Admin** khusus diakses oleh pengguna berkewenangan **Admin** atau **Moderator** untuk memantau kesehatan server, mengelola akun user, mengatur hak akses menu, dan mengkonfigurasi sistem.'
+    ],
+    note: { text: 'Perubahan konfigurasi di Dasbor Admin berdampak secara global ke seluruh pengguna aplikasi.' },
+    sections: [
+      {
+        title: 'Audit Storage & Failover Rotasi 85%',
+        bullets: [
+          'Pantau statistik Total User, Total Dokumen RKA, dan Total Pagu Anggaran.',
+          'Grafik **Penggunaan Penyimpanan** memiliki ambang rotasi/failover otomatis pada **85%** kapasitas.',
+          'Indikator status hijau menandai koneksi **Gemini API Key** dan **Database Neon PostgreSQL** aktif.'
+        ]
+      },
+      {
+        title: 'Manajemen Akun & Role Pengguna',
+        steps: [
+          'Buka tab **Manajemen User**.',
+          'Klik **Tambah User** untuk membuat akun baru dengan menentukan username, nama, dan peran (**Admin**, **Moderator**, atau **User**).',
+          'Gunakan tombol **Reset Password** untuk mereset kata sandi pengguna yang lupa.',
+          'Ubah status akun menjadi Aktif atau Nonaktif sesuai kebutuhan.'
+        ]
+      },
+      {
+        title: 'Kontrol Sakelar Menu Global (Menu Control)',
+        body: ['Tab **Kontrol Menu** memungkinkan Admin mengunci atau membuka akses menu (Unggah RKA, Agentic AI, Arsip, dll.) menggunakan sakelar toggle. Menu yang dinonaktifkan akan menampilkan lencana **Nonaktif** bagi pengguna biasa.']
+      },
+      {
+        title: 'Konfigurasi API, Database Neon & SSH Tunnel',
+        bullets: [
+          '**Konfigurasi API:** Pengisian Gemini API Key dari Google AI Studio.',
+          '**Database Neon:** Pengaturan string koneksi PostgreSQL Neon Cloud.',
+          '**SSH Config:** Pengaturan koneksi server aman.'
+        ]
+      },
+      {
+        title: 'Log Aktivitas (Audit Trail) & Backup Full',
+        body: ['Tab **Log Aktivitas** mencatat riwayat tindakan pengguna (login, unggah, edit, hapus). Tab **Backup & Pemulihan** memungkinkan penanganan cadangan database penuh.']
+      }
+    ],
+    actions: [{ label: 'Buka Dasbor Admin', tab: 'admin-dashboard' }]
   },
   {
     id: 'admin',
@@ -562,28 +621,24 @@ const ARTICLES = [
     title: 'Mengontak Tim IT / Admin Bapperida Jika Menu Nonaktif',
     keywords: 'admin menu nonaktif tidak aktif terkunci lapor laporan hubungi it whatsapp akses aktivasi',
     intro: [
-      'Admin dapat menonaktifkan menu tertentu untuk sementara. Menu itu tampil dengan lencana **Nonaktif** di sidebar, dan halamannya menampilkan pesan **Menu Belum Aktif**.',
-      'Untuk meminta akses atau menanyakan jadwal pengaktifan, kirim laporan lewat menu Laporan. Laporan langsung masuk ke aplikasi admin.'
+      'Admin dapat menonaktifkan menu tertentu untuk sementara. Menu itu tampil dengan lencana **Nonaktif** di sidebar.',
+      'Untuk meminta pengaktifan akses atau bantuan, kirim laporan melalui menu **Laporan**.'
     ],
-    note: { text: 'Admin dan Moderator tetap dapat membuka semua menu, termasuk yang dinonaktifkan untuk pengguna biasa.' },
+    note: { text: 'Admin dan Moderator dapat mengakses seluruh menu tanpa terpengaruh sakelar nonaktif.' },
     sections: [
       {
-        title: 'Mengirim laporan ke admin',
+        title: 'Mengirim formulir laporan kendala',
         steps: [
-          'Klik ikon bendera (**Laporan**) di pojok kanan atas aplikasi.',
-          'Isi **Judul Laporan** dan **Deskripsi Laporan**, misalnya “Permintaan aktivasi menu Hasil Analisis”.',
-          'Pilih **Kategori**: Kendala Teknis, Bug Aplikasi, Masukan & Saran, Permintaan Bantuan, atau Lainnya.',
-          'Isi **Nama Pelapor** dan minimal salah satu dari email atau nomor WhatsApp agar admin dapat menghubungi Anda kembali.',
-          'Lampirkan tangkapan layar bila perlu (maksimal 5 gambar, 5 MB per gambar), lalu kirim.'
+          'Klik ikon bendera (**Laporan**) di sidebar/header aplikasi.',
+          'Isi **Judul Laporan** dan **Deskripsi Laporan** secara rinci.',
+          'Pilih Kategori: *Kendala Teknis*, *Bug Aplikasi*, *Masukan & Saran*, *Permintaan Bantuan*, atau *Lainnya*.',
+          'Isi Nama Pelapor dan minimal salah satu kontak (**Email** atau **No. WhatsApp**).',
+          'Lampirkan hingga 5 gambar screenshot (maks. 5 MB per gambar), lalu kirim.'
         ]
       },
       {
-        title: 'Hal yang perlu disertakan',
-        bullets: ['Nama menu yang nonaktif.', 'Nama akun dan OPD Anda.', 'Alasan Anda membutuhkan menu tersebut.']
-      },
-      {
-        title: 'Setelah laporan terkirim',
-        body: ['Admin menindaklanjuti lewat WhatsApp atau email yang Anda isi pada formulir. Menu yang sudah diaktifkan langsung terbuka saat halaman dimuat ulang.']
+        title: 'Penanganan laporan oleh Admin',
+        body: ['Laporan langsung masuk ke tab **Laporan Masuk** di Dasbor Admin. Admin akan menindaklanjuti via Email atau No. WhatsApp yang Anda cantumkan.']
       }
     ],
     actions: [{ label: 'Buka formulir Laporan', tab: 'report' }]

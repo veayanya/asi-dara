@@ -140,8 +140,35 @@
                   <template v-else>
                     <span class="sr-only">{{ s.alt }}</span>
                     <div :aria-hidden="s.visual === 'modes' ? undefined : 'true'" class="flex w-full justify-center">
-                      <!-- 1.1 Format berkas -->
-                      <div v-if="s.visual === 'files'" class="pt-mock w-full max-w-[480px] space-y-2 p-3 text-[12px]">
+                      <!-- 1.1 Main Dashboard visual -->
+                      <div v-if="s.visual === 'main-dash'" class="pt-mock w-full max-w-[580px] space-y-3 p-3 text-[12px]">
+                        <div class="flex items-center justify-between border-b border-line pb-2">
+                          <span class="flex items-center gap-1.5 font-heading text-[13px] font-bold text-brand">
+                            <Ico name="chart" :size="16" />Dasbor Utama ASI DARA
+                          </span>
+                          <span class="rounded-full bg-ok-soft px-2.5 py-0.5 text-[11px] font-semibold text-ok-ink">Sistem Normal</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                          <div class="rounded-lg border border-line bg-surface p-2.5">
+                            <p class="m-0 text-[11px] font-semibold text-ink-3">Model Gemini 2.5 Flash</p>
+                            <p class="m-0 mt-1 flex items-center gap-1.5 font-bold text-ok-ink"><span class="h-2 w-2 rounded-full bg-ok"></span>Siap Digunakan</p>
+                          </div>
+                          <div class="rounded-lg border border-line bg-surface p-2.5">
+                            <p class="m-0 text-[11px] font-semibold text-ink-3">Arsip Dokumen RKA</p>
+                            <p class="m-0 mt-1 font-bold text-ink">42 Dokumen Tersimpan</p>
+                          </div>
+                        </div>
+                        <div class="pt-hl flex items-center justify-between rounded-lg bg-brand p-3 text-white">
+                          <div>
+                            <p class="m-0 text-[13px] font-bold">Mulai Analisis Dokumen RKA</p>
+                            <p class="m-0 text-[11px] opacity-85">Unggah RKA PDF dan dapatkan hasil evaluasi SROI otomatis</p>
+                          </div>
+                          <span class="shrink-0 rounded-md bg-white px-3 py-1.5 text-[11px] font-bold text-brand">Buka Menu</span>
+                        </div>
+                      </div>
+
+                      <!-- 1.2 Format berkas -->
+                      <div v-else-if="s.visual === 'files'" class="pt-mock w-full max-w-[480px] space-y-2 p-3 text-[12px]">
                         <p class="m-0 px-1 font-heading text-[13px] font-bold">Berkas yang Anda siapkan</p>
                         <div class="pt-hl flex items-center gap-3 rounded-md border border-line bg-ok-soft px-3 py-2">
                           <span class="grid h-8 w-8 shrink-0 place-items-center rounded bg-white text-[10px] font-extrabold text-bad-ink">PDF</span>
@@ -170,7 +197,7 @@
                         <p class="m-0 px-1 pt-1 text-ink-3">Maksimal 100 MB per berkas</p>
                       </div>
 
-                      <!-- 1.2 Menu + kotak unggah -->
+                      <!-- 1.3 Menu + kotak unggah -->
                       <div v-else-if="s.visual === 'dropzone'" class="pt-mock flex w-full max-w-[580px] overflow-hidden text-[12px]">
                         <div class="hidden w-[150px] shrink-0 space-y-1 border-r border-line bg-inset p-2 sm:block">
                           <p class="pt-hl m-0 rounded-md bg-brand px-2 py-1.5 font-semibold text-white">Unggah Berkas RKA</p>
@@ -191,7 +218,7 @@
                         </div>
                       </div>
 
-                      <!-- 1.3 Antrean -->
+                      <!-- 1.4 Antrean -->
                       <div v-else-if="s.visual === 'queue'" class="pt-mock w-full max-w-[480px] p-3 text-[12px]">
                         <p class="m-0 mb-3 text-center font-heading text-[13px] font-bold">Memproses Antrean Dokumen...</p>
                         <div class="space-y-2">
@@ -213,7 +240,7 @@
                         </p>
                       </div>
 
-                      <!-- 1.4 Edit OPD -->
+                      <!-- 1.5 Edit OPD -->
                       <div v-else-if="s.visual === 'opd'" class="pt-mock w-full max-w-[480px] overflow-hidden text-[12px]">
                         <div class="flex items-center justify-between border-b border-line px-3 py-2">
                           <p class="m-0 font-heading text-[13px] font-bold">Edit Manual Hasil Analisis</p>
@@ -276,7 +303,7 @@
                           <span class="inline-flex items-center gap-1 text-ink-3"><Ico name="trash" :size="12" />Bersihkan</span>
                         </div>
                         <div class="pt-hl rounded-lg border-2 border-dashed border-line-strong bg-inset px-3 py-3 text-center">
-                          <p class="m-0 font-semibold">Unggah Dokumen RKA (PDF, DOCX, XLSX, CSV, TXT)</p>
+                          <p class="m-0 font-semibold">Unggah Dokumen RKA (PDF, DOCX, XLSX, CSV, TXT, JSON)</p>
                           <p class="m-0 text-ink-3">Tarik file ke sini atau klik untuk memilih file</p>
                         </div>
                         <p class="m-0 font-semibold text-ink-2">Teks / Struktur Rincian Anggaran (RKA):</p>
@@ -477,7 +504,33 @@
                         </div>
                       </div>
 
-                      <!-- 3.6 Unduh & ekspor -->
+                      <!-- 3.6 Edit Modal & AI visual -->
+                      <div v-else-if="s.visual === 'edit-modal'" class="pt-mock w-full max-w-[560px] overflow-hidden text-[12px]">
+                        <div class="flex items-center justify-between border-b border-line bg-inset px-3 py-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Modal Perbaikan &amp; Edit Analysis</p>
+                          <span class="rounded-md bg-brand-soft px-2 py-0.5 text-[11px] font-bold text-brand">Edit Manual / AI</span>
+                        </div>
+                        <div class="space-y-2.5 p-3">
+                          <div class="flex flex-wrap gap-1.5">
+                            <span class="pt-hl rounded-md bg-brand px-2.5 py-1 font-semibold text-white">Identitas &amp; Pagu</span>
+                            <span class="rounded-md border border-line bg-surface px-2.5 py-1 text-ink-2">Indikator Kinerja</span>
+                            <span class="rounded-md border border-line bg-surface px-2.5 py-1 text-ink-2">Komponen Belanja</span>
+                            <span class="rounded-md border border-line bg-surface px-2.5 py-1 text-ink-2">Parameter SROI</span>
+                          </div>
+                          <div class="space-y-2 rounded-md border border-line bg-surface p-2.5">
+                            <div>
+                              <span class="block text-[11px] font-semibold text-ink-3">Nama Perangkat Daerah (OPD)</span>
+                              <div class="pt-hl rounded border border-line bg-inset px-2 py-1 font-semibold text-ink">Dinas Kesehatan Kab. Cirebon</div>
+                            </div>
+                            <div>
+                              <span class="block text-[11px] font-semibold text-ink-3">Pagu Anggaran Subkegiatan (Rp)</span>
+                              <div class="rounded border border-line bg-inset px-2 py-1 font-semibold text-ink">250.000.000</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 3.7 Unduh & ekspor -->
                       <div v-else-if="s.visual === 'export'" class="pt-mock w-full max-w-[540px] space-y-3 p-3 text-[12px]">
                         <div>
                           <p class="m-0 mb-1.5 font-semibold text-ink-3">Di halaman Hasil Analisis</p>
@@ -495,6 +548,142 @@
                           <div class="flex flex-wrap gap-2">
                             <span class="pt-hl inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 font-semibold text-white"><Ico name="download" :size="13" />Ekspor Full Database (JSON)</span>
                             <span class="inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 py-1.5 font-semibold text-ink-2">Backup &amp; Pemulihan</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 4.1 Visual Arsip Dokumen -->
+                      <div v-else-if="s.visual === 'archive'" class="pt-mock w-full max-w-[620px] overflow-hidden p-3 text-[12px] space-y-2.5">
+                        <div class="flex items-center justify-between gap-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Arsip Dokumen RKA SKPD</p>
+                          <div class="pt-hl flex w-48 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 text-ink-3">
+                            <Ico name="search" :size="13" /><span>Cari OPD / Subkeg...</span>
+                          </div>
+                        </div>
+                        <div class="overflow-hidden rounded-md border border-line">
+                          <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 bg-inset px-3 py-1.5 text-[11px] font-bold text-ink-3">
+                            <span>Subkegiatan / OPD</span><span>Pagu</span><span>SROI</span><span>Aksi</span>
+                          </div>
+                          <div class="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 border-t border-line bg-surface px-3 py-2">
+                            <div>
+                              <p class="m-0 truncate font-bold">Penyusunan Perencanaan RKA</p>
+                              <p class="m-0 text-[10px] text-ink-3">Dinas Kesehatan • 2026</p>
+                            </div>
+                            <span class="font-semibold">250 Jt</span>
+                            <span class="rounded bg-ok-soft px-1.5 py-0.5 font-bold text-ok-ink">1,24</span>
+                            <span class="pt-hl rounded bg-brand px-2 py-1 text-[11px] font-bold text-white">Lihat</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 4.2 Form Laporan -->
+                      <div v-else-if="s.visual === 'report-form'" class="pt-mock w-full max-w-[520px] space-y-2.5 p-3 text-[12px]">
+                        <div class="border-b border-line pb-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Formulir Laporan Kendala Pengguna</p>
+                          <p class="m-0 text-[11px] text-ink-3">Kirim masukan atau bantuan jika menu tertentu nonaktif</p>
+                        </div>
+                        <div class="space-y-2">
+                          <div>
+                            <p class="m-0 mb-1 font-semibold text-ink-2">Subjek Kendala</p>
+                            <div class="rounded border border-line bg-surface px-2.5 py-1.5 text-ink-2">Permohonan Pengaktifan Menu Unggah RKA</div>
+                          </div>
+                          <div>
+                            <p class="m-0 mb-1 font-semibold text-ink-2">Rincian Laporan</p>
+                            <div class="pt-hl rounded border border-line bg-surface px-2.5 py-2 text-ink-3">Mohon aktifkan kembali menu Unggah RKA untuk evaluasi RKA Diskes...</div>
+                          </div>
+                          <span class="pt-hl inline-block rounded-md bg-brand px-3 py-1.5 font-semibold text-white">Kirim Laporan ke Admin</span>
+                        </div>
+                      </div>
+
+                      <!-- 5.1 Admin Stats -->
+                      <div v-else-if="s.visual === 'admin-stats'" class="pt-mock w-full max-w-[600px] space-y-3 p-3 text-[12px]">
+                        <div class="flex items-center justify-between border-b border-line pb-2">
+                          <span class="flex items-center gap-1.5 font-heading text-[13px] font-bold text-brand">
+                            <Ico name="shield" :size="16" />Dasbor Admin &amp; Monitoring Server
+                          </span>
+                          <span class="rounded-full bg-brand-soft px-2.5 py-0.5 text-[11px] font-extrabold text-brand">Role: Admin</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                          <div class="rounded-md border border-line bg-surface p-2">
+                            <p class="m-0 text-[10px] font-semibold text-ink-3">Total User</p>
+                            <p class="m-0 font-bold text-[14px]">18 User</p>
+                          </div>
+                          <div class="rounded-md border border-line bg-surface p-2">
+                            <p class="m-0 text-[10px] font-semibold text-ink-3">Penyimpanan DB</p>
+                            <p class="m-0 font-bold text-[14px] text-ok-ink">42% (Normal)</p>
+                          </div>
+                          <div class="rounded-md border border-line bg-surface p-2">
+                            <p class="m-0 text-[10px] font-semibold text-ink-3">Ambang Rotasi</p>
+                            <p class="m-0 font-bold text-[14px] text-warn-ink">85% Limit</p>
+                          </div>
+                        </div>
+                        <div class="rounded-md border border-line bg-inset p-2">
+                          <div class="mb-1 flex justify-between text-[11px] font-semibold">
+                            <span>Status Kapasitas Storage Failover</span>
+                            <span class="font-bold text-ok-ink">2.1 GB / 5.0 GB</span>
+                          </div>
+                          <div class="h-2 overflow-hidden rounded-full bg-line">
+                            <div class="h-full w-[42%] bg-brand"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 5.2 Admin Users -->
+                      <div v-else-if="s.visual === 'admin-users'" class="pt-mock w-full max-w-[560px] space-y-2.5 p-3 text-[12px]">
+                        <div class="flex items-center justify-between border-b border-line pb-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Manajemen Akun &amp; Role Pengguna</p>
+                          <span class="pt-hl rounded bg-brand px-2 py-1 text-[11px] font-semibold text-white">+ Tambah User</span>
+                        </div>
+                        <div class="space-y-1.5">
+                          <div class="flex items-center justify-between rounded border border-line bg-surface p-2">
+                            <div>
+                              <p class="m-0 font-bold">admin_bapperida <span class="rounded bg-brand-soft px-1.5 py-0.5 text-[10px] font-extrabold text-brand">Admin</span></p>
+                              <p class="m-0 text-[10px] text-ink-3">Akses penuh sistem &amp; audit</p>
+                            </div>
+                            <span class="rounded-full bg-ok-soft px-2 py-0.5 text-[10px] font-bold text-ok-ink">Aktif</span>
+                          </div>
+                          <div class="flex items-center justify-between rounded border border-line bg-surface p-2">
+                            <div>
+                              <p class="m-0 font-bold">evaluator_diskes <span class="rounded border border-line bg-inset px-1.5 py-0.5 text-[10px] font-bold text-ink-2">User</span></p>
+                              <p class="m-0 text-[10px] text-ink-3">Operator OPD Dinas Kesehatan</p>
+                            </div>
+                            <span class="rounded-full bg-ok-soft px-2 py-0.5 text-[10px] font-bold text-ok-ink">Aktif</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 5.3 Admin Menu Toggle -->
+                      <div v-else-if="s.visual === 'admin-menu'" class="pt-mock w-full max-w-[540px] space-y-2.5 p-3 text-[12px]">
+                        <div class="border-b border-line pb-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Kontrol Sakelar Akses Menu Global</p>
+                          <p class="m-0 text-[11px] text-ink-3">Aktifkan atau batasi fitur aplikasi untuk role biasa</p>
+                        </div>
+                        <div class="space-y-2">
+                          <div class="flex items-center justify-between rounded border border-line bg-surface p-2">
+                            <span class="font-semibold">Unggah Berkas RKA</span>
+                            <span class="pt-hl rounded-full bg-brand px-3 py-1 text-[10px] font-extrabold text-white">Aktif</span>
+                          </div>
+                          <div class="flex items-center justify-between rounded border border-line bg-surface p-2">
+                            <span class="font-semibold text-ink-3">Simulasi Percakapan Agen AI</span>
+                            <span class="rounded-full bg-bad-soft px-3 py-1 text-[10px] font-extrabold text-bad-ink">Nonaktif</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 5.4 Admin Config -->
+                      <div v-else-if="s.visual === 'admin-config'" class="pt-mock w-full max-w-[560px] space-y-2.5 p-3 text-[12px]">
+                        <div class="border-b border-line pb-2">
+                          <p class="m-0 font-heading text-[13px] font-bold">Konfigurasi Kunci API &amp; Database Remote</p>
+                          <p class="m-0 text-[11px] text-ink-3">Atur kredensial Gemini API Key &amp; PostgreSQL Neon</p>
+                        </div>
+                        <div class="space-y-2">
+                          <div>
+                            <p class="m-0 mb-1 font-semibold text-ink-2">Gemini API Key (Google AI Studio)</p>
+                            <div class="pt-hl rounded border border-line bg-surface px-2.5 py-1.5 font-mono text-[11px]">AIzaSyB...********************</div>
+                          </div>
+                          <div>
+                            <p class="m-0 mb-1 font-semibold text-ink-2">Database Neon Connection String</p>
+                            <div class="truncate rounded border border-line bg-surface px-2.5 py-1.5 font-mono text-[10px] text-ink-3">postgresql://neondb_owner:***@ep-cool-base-1234.us-east-2.aws.neon.tech/neondb</div>
                           </div>
                         </div>
                       </div>
@@ -665,7 +854,11 @@ const ICONS = {
   chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
   chip: '<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
   chart: '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
-  trend: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>'
+  trend: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>',
+  sliders: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/>'
 };
 const Ico = (props) =>
   h('svg', {
@@ -688,76 +881,74 @@ Ico.props = ['name', 'size'];
 const RAW_PARTS = [
   {
     id: 'bagian-1',
-    title: 'Mengunggah dan Menganalisis Dokumen RKA',
-    lead: 'Unggah berkas RKA berformat PDF lewat menu Unggah Berkas RKA. ASI DARA membaca isinya lalu menyusun Analisis Valuasi Prakiraan Dampak Program.',
-    cta: { label: 'Buka Unggah Berkas RKA', tab: 'dashboard' },
+    title: 'Ringkasan Sistem & Unggah Dokumen RKA',
+    lead: 'Dasbor Utama memberikan gambaran kesiapan sistem. Unggah berkas RKA berformat PDF untuk dianalisis oleh ASI DARA.',
+    cta: { label: 'Buka Dasbor & Unggah Berkas RKA', tab: 'dashboard' },
     next: 'bagian-2',
-    // Sumber: UploadSection.vue, useAnalysis.js (handleRkaFiles: hanya PDF, maks. 100 MB, OPD dibaca otomatis)
     steps: [
       {
         id: 'b1-langkah-1',
+        short: 'Periksa Dasbor Utama',
+        title: 'Periksa status kesiapan sistem pada Dasbor Utama.',
+        text: 'Buka menu **Dasbor Utama** untuk melihat indikator kesiapan model AI, total dokumen tersimpan, dan kecepatan analisis.',
+        bullets: [
+          'Kartu **Model Gemini 2.5 Flash** menandai status hijau bila server AI siap memproses.',
+          'Kartu **Arsip Dokumen RKA** menampilkan jumlah dokumen RKA yang tersimpan di sistem.',
+          'Kartu **Kecepatan Analisis AI** menginfokan waktu pemrosesan rata-rata per dokumen.',
+          'Klik banner **Mulai Analisis** untuk langsung menuju halaman analisis.'
+        ],
+        visual: 'main-dash',
+        caption: 'Dasbor Utama & Status Sistem',
+        alt: 'Tampilan Dasbor Utama dengan kartu status Gemini 2.5 Flash, jumlah arsip dokumen, dan banner mulai analisis.',
+        keywords: 'dasbor utama status gemini flash arsip dokumen kecepatan analisis siap banner',
+        img: null
+      },
+      {
+        id: 'b1-langkah-2',
         short: 'Siapkan berkas PDF',
         title: 'Siapkan berkas RKA berformat PDF.',
         text: 'Menu **Unggah Berkas RKA** hanya menerima dokumen RKA/DPA SKPD Kabupaten Cirebon dalam bentuk PDF.',
         bullets: [
-          'Berkas Excel (XLSX), Word (DOCX), dan foto ditolak di menu ini. Untuk berkas XLSX, pakai **Simulasi Percakapan Agen AI** seperti di Bagian 2.',
-          'Gunakan PDF asli yang teksnya bisa diseleksi, bukan foto atau hasil pindai.',
-          'Ukuran maksimal **100 MB** per berkas. Berkas kosong (0 byte) juga ditolak.',
-          'Beri nama berkas yang mudah dikenali, misalnya memuat nama OPD dan sub kegiatan, agar mudah dicari di arsip.'
+          'Gunakan PDF digital asli yang teksnya bisa diseleksi, bukan foto atau hasil scan.',
+          'Ukuran maksimal **100 MB** per berkas. Berkas kosong (0 byte) atau format XLSX/DOCX di menu ini akan ditolak.',
+          'Untuk berkas Excel (XLSX) atau Word (DOCX), gunakan menu **Simulasi Percakapan Agen AI**.'
         ],
         visual: 'files',
-        caption: 'Contoh berkas',
+        caption: 'Format berkas RKA',
         alt: 'Contoh daftar berkas: PDF RKA diterima, sedangkan berkas XLSX dan foto ditolak.',
         keywords: 'format pdf xlsx excel docx ukuran batas 100 mb persiapan siapkan berkas foto pindai scan',
         img: null
       },
       {
-        id: 'b1-langkah-2',
-        short: 'Pilih berkas di menu Unggah',
-        title: 'Buka menu Unggah Berkas RKA, lalu pilih berkas.',
-        text: 'Klik **Unggah Berkas RKA** di sidebar kiri. Klik **Pilih Dokumen RKA**, atau tarik berkas PDF ke kotak unggah.',
+        id: 'b1-langkah-3',
+        short: 'Pilih & unggah berkas',
+        title: 'Buka menu Unggah Berkas RKA dan pantau pemrosesan.',
+        text: 'Klik **Unggah Berkas RKA** di sidebar kiri. Klik **Pilih Dokumen RKA** atau tarik berkas PDF ke area unggah.',
         bullets: [
-          'Beberapa berkas bisa dipilih sekaligus. Semuanya masuk ke antrean pemrosesan.',
-          'Dokumen diproses langsung di browser Anda.',
-          'Jika menu bertanda **Nonaktif**, admin sedang menutupnya sementara. Minta pengaktifan lewat menu **Laporan**.'
+          'Beberapa berkas bisa dipilih sekaligus untuk diproses secara otomatis.',
+          'Tunggu hingga status antrean mencapai 100% pada semua dokumen.',
+          'Jangan menutup atau memuat ulang halaman selama antrean berjalan.'
         ],
         visual: 'dropzone',
         caption: 'Menu Unggah Berkas RKA',
         alt: 'Tampilan menu Unggah Berkas RKA dengan tombol Pilih Dokumen RKA di dalam kotak unggah.',
-        keywords: 'unggah upload menu sidebar pilih dokumen tarik drop drag banyak berkas sekaligus nonaktif',
-        img: null
-      },
-      {
-        id: 'b1-langkah-3',
-        short: 'Pantau antrean',
-        title: 'Pantau antrean sampai selesai.',
-        text: 'Setiap berkas menampilkan status dan persentase kemajuan. Tunggu sampai semua berkas selesai.',
-        bullets: [
-          'Jangan menutup atau memuat ulang halaman selama antrean berjalan.',
-          'Jika berkas ditolak, notifikasi muncul di layar, misalnya **Format Berkas Tidak Didukung** atau **Ukuran Terlalu Besar**.',
-          'Hasil analisis tersimpan di **Arsip Dokumen RKA** dan bisa dibuka kapan saja.'
-        ],
-        visual: 'queue',
-        caption: 'Antrean pemrosesan',
-        alt: 'Antrean pemrosesan dokumen dengan bilah kemajuan dan persentase untuk tiap berkas.',
-        keywords: 'antrean proses progres persen status gagal ditolak notifikasi tunggu selesai',
+        keywords: 'unggah upload menu sidebar pilih dokumen tarik drop drag banyak berkas sekaligus nonaktif antrean',
         img: null
       },
       {
         id: 'b1-langkah-4',
-        short: 'Periksa nama OPD',
-        title: 'Periksa nama OPD hasil bacaan sistem.',
-        text: 'Anda tidak perlu memilih OPD. ASI DARA membaca nama Perangkat Daerah langsung dari dokumen RKA.',
+        short: 'Verifikasi OPD & Pagu',
+        title: 'Verifikasi nama Perangkat Daerah (OPD) dan Pagu.',
+        text: 'ASI DARA membaca nama Perangkat Daerah dan Pagu Anggaran secara otomatis dari dokumen RKA.',
         bullets: [
-          'Cek nama OPD pada kartu **Perangkat Daerah** di halaman **Hasil Analisis**.',
-          'Jika nama terbaca keliru, klik **Edit Manual**, buka bagian **Identitas & Pagu**, lalu ubah kolom **Perangkat Daerah (OPD)**.',
-          'Cara lain: klik **Unggah Ulang PDF** (maksimal 25 MB) agar dokumen dianalisis ulang.',
-          'Perubahan disimpan sebagai versi baru, jadi data sebelumnya tetap aman.'
+          'Periksa nama OPD dan Pagu pada kartu header di halaman **Hasil Analisis**.',
+          'Jika nama terbaca keliru, klik **Edit Manual**, buka bagian **Identitas & Pagu**, lalu sesuaikan kolom OPD.',
+          'Anda juga dapat memilih **Unggah Ulang PDF** (maksimal 25 MB) untuk menganalisis ulang dokumen.'
         ],
         visual: 'opd',
         caption: 'Edit Manual, Identitas & Pagu',
         alt: 'Layar Edit Manual pada bagian Identitas dan Pagu, dengan kolom Perangkat Daerah (OPD) ditandai.',
-        keywords: 'opd perangkat daerah skpd satuan kerja pilih ubah koreksi salah edit manual unggah ulang',
+        keywords: 'opd perangkat daerah skpd satuan kerja pilih ubah koreksi salah edit manual unggah ulang pagu',
         img: null
       }
     ]
@@ -765,97 +956,93 @@ const RAW_PARTS = [
   {
     id: 'bagian-2',
     title: 'Menggunakan Simulasi Percakapan Agen AI',
-    lead: 'Asisten AI untuk mengevaluasi RKA, merevisi anggaran, dan menanyakan aturan. Buka lewat menu Simulasi Percakapan Agen AI.',
+    lead: 'Asisten AI interaktif untuk evaluasi RKA, revisi anggaran, dan konsultasi regulasi. Buka lewat menu Simulasi Percakapan Agen AI.',
     cta: { label: 'Buka Simulasi Percakapan Agen AI', tab: 'agentic-ai' },
     next: 'bagian-3',
-    // Sumber: AiAgenChatbotRka.vue, b-baru-main/routes/aibotRouter.js (unggah maks. 20 MB, 1 berkas)
     steps: [
       {
         id: 'b2-langkah-1',
         short: 'Pilih mode kerja',
         title: 'Buka Simulasi Percakapan Agen AI dan pilih mode kerja.',
-        text: 'Pilih salah satu dari tiga tab di bagian atas halaman sesuai kebutuhan Anda.',
+        text: 'Pilih salah satu dari 3 mode kerja sesuai kebutuhan analisis Anda.',
         bullets: [
-          '**Mode 1, Analis Evaluasi RKA:** menguji kepatuhan SBM, efisiensi anggaran, dan Nilai Prakiraan Dampak.',
-          '**Mode 2, Eksekutor Revisi RKA:** merasionalisasi pagu dan menyusun draf DPA baru.',
-          '**Mode 3, Konsultasi Regulasi:** tanya jawab seputar Permendagri 77 dan SSH.',
-          'Bila lencana status masih **Menghubungkan...**, tunggu 30 sampai 60 detik sampai berubah menjadi **Server & AI Online**.'
+          '**Mode 1 - Analis Evaluasi RKA:** Menguji kepatuhan SBM, efisiensi anggaran, dan Nilai Prakiraan Dampak.',
+          '**Mode 2 - Eksekutor Revisi RKA:** Rasionalisasi pagu dan menyusun draf DPA baru.',
+          '**Mode 3 - Konsultasi Regulasi:** Tanya jawab seputar Permendagri 77, SIPD-RI, dan SSH.',
+          'Pastikan status lencana di pojok atas menunjukkan **Server & AI Online**.'
         ],
         visual: 'modes',
-        caption: 'Tiga mode kerja',
+        caption: 'Tiga mode kerja Agentic AI',
         alt: 'Tiga tab mode: Mode 1 Analis Evaluasi RKA, Mode 2 Eksekutor Revisi RKA, Mode 3 Konsultasi Regulasi.',
-        keywords: 'chatbot ai agen mode 1 mode 2 mode 3 tab evaluasi revisi konsultasi regulasi server online menghubungkan',
+        keywords: 'chatbot ai agen mode 1 mode 2 mode 3 tab evaluasi revisi konsultasi regulasi server online',
         img: null
       },
       {
         id: 'b2-langkah-2',
-        short: 'Masukkan rincian anggaran',
-        title: 'Masukkan rincian anggaran (Mode 1 dan Mode 2).',
-        text: 'Ada dua cara mengisi kotak **Teks / Struktur Rincian Anggaran (RKA)**: unggah dokumen, atau tempel teksnya langsung.',
+        short: 'Input rincian anggaran',
+        title: 'Masukkan data RKA via berkas atau tempel teks.',
+        text: 'Pada Mode 1 dan Mode 2, Anda dapat mengunggah berkas atau menempelkan rincian anggaran.',
         bullets: [
-          'Unggah satu berkas PDF, DOCX, XLSX, XLS, CSV, TXT, atau JSON (maksimal **20 MB**). Isinya diekstrak otomatis ke kotak teks.',
-          'Untuk tempel manual, tulis per rekening: nama rekening, anggaran dalam rupiah, dan batas SBM bila ada.',
-          'Belum punya berkas? Klik **Contoh RKA** di pojok kanan atas halaman untuk mencoba.',
-          'Klik **Bersihkan** untuk mengosongkan semua isian.'
+          'Dukungan format berkas: PDF, DOCX, XLSX, XLS, CSV, TXT, dan JSON (maksimal **20 MB** per berkas).',
+          'Teks rincian anggaran diekstrak otomatis ke kotak teks.',
+          'Gunakan tombol **Contoh RKA** untuk mengisi data sampel secara instan.',
+          'Klik **Bersihkan** untuk mengosongkan semua area input.'
         ],
         visual: 'input',
         caption: 'Panel Dokumen RKA & Input Data',
         alt: 'Panel input: kotak unggah dokumen dan kotak teks rincian anggaran berisi contoh program, kegiatan, dan rekening.',
-        keywords: 'teks tempel paste rincian anggaran xlsx excel docx csv txt json 20 mb unggah contoh rka bersihkan sbm rekening',
+        keywords: 'teks tempel paste rincian anggaran xlsx excel docx csv txt json 20 mb unggah contoh rka bersihkan',
         img: null
       },
       {
         id: 'b2-langkah-3',
-        short: 'Jalankan dan baca hasil',
-        title: 'Tulis instruksi tambahan, jalankan, lalu baca hasilnya.',
-        text: 'Tombol jalankan aktif setelah kotak rincian anggaran terisi. Hasil muncul di panel kanan.',
+        short: 'Jalankan & ekspor hasil',
+        title: 'Tulis instruksi tambahan, jalankan, lalu ekspor hasilnya.',
+        text: 'Tombol pemrosesan aktif setelah rincian anggaran terisi.',
         bullets: [
-          'Mode 1: isi **Instruksi Tambahan Evaluasi** (boleh dikosongkan), lalu klik **Jalankan Evaluasi & Reviu RKA**.',
-          'Mode 2: isi **Arahan Rasionalisasi / Pemangkasan Anggaran**, misalnya pangkas honorarium tim 50%, lalu klik **Eksekusi & Generate Revisi RKA**.',
-          'Klik ikon salin untuk menyalin hasil (format Markdown). Klik ikon cetak untuk mencetak atau menyimpannya sebagai PDF.',
-          'AI hanya mengusulkan. Periksa kembali hasilnya dengan dokumen asli sebelum dipakai sebagai dasar keputusan anggaran.'
+          'Mode 1: Isi **Instruksi Tambahan Evaluasi**, lalu klik **Jalankan Evaluasi & Reviu RKA**.',
+          'Mode 2: Isi **Arahan Pemangkasan**, misal *"Pangkas honorarium tim 50%"*, lalu klik **Eksekusi & Generate Revisi RKA**.',
+          'Gunakan ikon **Salin** untuk menyalin teks (Markdown) atau ikon **Cetak** untuk mengekspor ke PDF.'
         ],
         visual: 'run',
-        caption: 'Jalankan dan hasil',
+        caption: 'Jalankan dan hasil evaluasi/revisi',
         alt: 'Kolom instruksi dengan tombol Jalankan Evaluasi dan Reviu RKA, serta panel hasil dengan ikon salin dan cetak.',
-        keywords: 'jalankan evaluasi reviu revisi eksekusi generate instruksi arahan pangkas salin copy cetak print pdf hasil tapd',
+        keywords: 'jalankan evaluasi reviu revisi eksekusi generate instruksi arahan pangkas salin copy cetak print pdf',
         img: null
       },
       {
         id: 'b2-langkah-4',
-        short: 'Konsultasi lewat Mode 3',
-        title: 'Gunakan Mode 3 untuk bertanya langsung.',
-        text: 'Ketik pertanyaan pada kolom di bawah percakapan, lalu tekan **Enter** atau klik tombol kirim.',
+        short: 'Konsultasi Mode 3',
+        title: 'Gunakan Mode 3 untuk bertanya seputar regulasi.',
+        text: 'Ketik pertanyaan pada kolom obrolan interaktif.',
         bullets: [
-          'Klik tombol cepat seperti **Geseran Belanja**, **Aturan SBM**, atau **Analisis Nilai Prakiraan Dampak** untuk mengirim pertanyaan contoh.',
-          'Sebutkan nama sub kegiatan, OPD, dan tahun anggaran agar jawaban lebih tepat. Ajukan satu pertanyaan per pesan.',
-          '**Hapus Histori** mengosongkan seluruh percakapan dan tidak bisa dibatalkan.'
+          'Klik tombol cepat seperti **Geseran Belanja**, **Aturan SBM**, atau **Analisis Dampak**.',
+          'Sebutkan nama subkegiatan, OPD, dan tahun anggaran agar jawaban akurat.',
+          'Gunakan **Hapus Histori** jika ingin memulai sesi baru.'
         ],
         visual: 'chat',
         caption: 'Mode 3: Konsultasi Regulasi',
         alt: 'Percakapan Mode 3 dengan tombol pertanyaan cepat, gelembung obrolan, dan kolom pengetikan pesan.',
-        keywords: 'konsultasi tanya jawab chat obrolan pertanyaan permendagri 77 ssh sbm geseran belanja hapus histori enter kirim',
+        keywords: 'konsultasi tanya jawab chat obrolan pertanyaan permendagri 77 ssh sbm geseran belanja hapus histori',
         img: null
       }
     ]
   },
   {
     id: 'bagian-3',
-    title: 'Membaca dan Memahami Hasil Analisis',
-    lead: 'Halaman Hasil Analisis menampilkan pagu, indikator kinerja, Nilai Prakiraan Dampak, dan rekomendasi belanja untuk satu dokumen RKA.',
+    title: 'Membaca & Mengedit Hasil Analisis',
+    lead: 'Halaman Hasil Analisis menampilkan valuasi SROI, rasionalisasi belanja, serta fitur perbaikan manual/AI.',
     cta: { label: 'Buka Hasil Analisis', tab: 'analyzer' },
-    next: null,
-    // Sumber: AnalysisResult.vue, useAnalysis.js (ambang: >= 1,0 Layak; 0,6-0,99 Cukup; < 0,6 Kurang), htmlReportGenerator.js
+    next: 'bagian-4',
     steps: [
       {
         id: 'b3-langkah-1',
         short: 'Buka Hasil Analisis',
-        title: 'Buka halaman Hasil Analisis.',
-        text: 'Setelah antrean selesai, klik menu **Hasil Analisis**. Anda juga bisa memilih dokumen di **Arsip Dokumen RKA**, lalu klik **Lihat Analisis**.',
+        title: 'Buka halaman Hasil Analisis & kelola versi.',
+        text: 'Setelah antrean selesai, buka menu **Hasil Analisis** atau klik **Lihat Analisis** pada Arsip Dokumen RKA.',
         bullets: [
-          'Jika dokumen punya lebih dari satu versi, pilih versi lewat menu **Versi** di samping judul halaman.',
-          'Tombol di bagian atas: **Edit Manual**, **Edit dengan AI**, **Unggah Ulang PDF**, **Unduh Laporan**, dan **Hapus**.',
-          'Dokumen yang belum tersimpan di arsip tidak bisa diedit. Buka dulu dari Arsip Dokumen RKA.'
+          'Pilih iterasi dokumen pada dropdown **Versi** bila memiliki beberapa draf revisi.',
+          'Tombol aksi atas: **Edit Manual**, **Edit dengan AI**, **Unggah Ulang PDF**, **Unduh Laporan**, dan **Hapus**.'
         ],
         visual: 'header',
         caption: 'Bilah atas Hasil Analisis',
@@ -865,83 +1052,223 @@ const RAW_PARTS = [
       },
       {
         id: 'b3-langkah-2',
-        short: 'Periksa identitas dan pagu',
-        title: 'Periksa identitas dan pagu anggaran.',
-        text: 'Kartu paling atas merangkum **Nama OPD**, **Program**, **Kegiatan**, **Sub Kegiatan**, **Pagu Anggaran**, dan **Tahun Anggaran**.',
+        short: 'Identitas & Indikator',
+        title: 'Periksa identitas, pagu, dan indikator kinerja.',
+        text: 'Kartu header memuat rincian OPD, program, kegiatan, subkegiatan, dan total pagu.',
         bullets: [
-          'Pagu adalah nilai input yang dipakai untuk menghitung Nilai Prakiraan Dampak.',
-          'Cocokkan pagu dan nama OPD dengan dokumen RKA asli.',
-          'Jika ada yang keliru, perbaiki lewat **Edit Manual** pada bagian **Identitas & Pagu**.'
+          'Tinjau **Target Kinerja per Indikator** untuk melihat tolok ukur outcome dan output.',
+          'Bagian **Kesesuaian Anggaran** menilai kecukupan pagu terhadap target output.'
         ],
         visual: 'hero',
-        caption: 'Kartu identitas dokumen (data ilustrasi)',
+        caption: 'Kartu identitas & pagu RKA',
         alt: 'Kartu identitas dokumen berisi subkegiatan, perangkat daerah, program, kegiatan, tahun anggaran, dan pagu anggaran.',
-        keywords: 'pagu anggaran identitas subkeg subkegiatan program kegiatan tahun anggaran perangkat daerah nilai input',
+        keywords: 'pagu anggaran identitas subkeg program kegiatan tahun anggaran perangkat daerah indikator target',
         img: null
       },
       {
         id: 'b3-langkah-3',
-        short: 'Baca indikator kinerja',
-        title: 'Baca indikator dan target kinerja.',
-        text: 'Bagian **Indikator & Target Kinerja** memuat tolok ukur dan target dari dokumen RKA. Di bawahnya, **Analisis Kesesuaian Anggaran** menilai apakah pagu cukup untuk mencapai target.',
+        short: 'Pahami Nilai SROI',
+        title: 'Pahami Rasio Nilai Prakiraan Dampak (SROI).',
+        text: 'Rasio SROI mengukur perbandingan total dampak sosial bersih terhadap pagu anggaran.',
         bullets: [
-          'Setiap kartu indikator menampilkan level indikator, target, dan nama tolok ukurnya.',
-          'Kotak **Apakah anggaran ini akan menyentuh target?** memuat proyeksi pencapaian beserta alasannya.',
-          'Jika muncul pesan bahwa data indikator belum tersedia, unggah ulang PDF dokumen itu agar datanya terbaca.'
+          '**Layak (\u2265 1,0 - Hijau):** Dampak sosial bernilai lebih tinggi dari pagu anggaran.',
+          '**Cukup (0,6 \u2013 0,99 - Kuning):** Dampak sosial sebanding dengan anggaran.',
+          '**Kurang (< 0,6 - Merah):** Anggaran kurang efisien dalam menghasilkan dampak.',
+          'Faktor penyesuaian: deadweight (maks 40%), attribution, displacement, drop-off, dan discount rate.'
         ],
-        visual: 'indikator',
-        caption: 'Indikator dan kesesuaian (data ilustrasi)',
-        alt: 'Kartu target kinerja per indikator di kiri dan kartu kesesuaian anggaran dengan target di kanan.',
-        keywords: 'indikator target kinerja tolok ukur kesesuaian outcome output capaian proyeksi',
+        visual: 'sroi',
+        caption: 'Rasio Nilai Prakiraan Dampak (SROI)',
+        alt: 'Kartu rasio Nilai Prakiraan Dampak bernilai 1,24 berstatus Layak, empat kartu nilai rupiah, dan skala kurang, cukup, layak.',
+        keywords: 'sroi nilai prakiraan dampak rasio layak cukup kurang deadweight attribution displacement drop-off discount rate',
         img: null
       },
       {
         id: 'b3-langkah-4',
-        short: 'Pahami Nilai Prakiraan Dampak',
-        title: 'Pahami Nilai Prakiraan Dampak.',
-        text: 'Angka utamanya adalah **Rasio Nilai Prakiraan Dampak**, yaitu nilai dampak yang dihasilkan saat ini dibagi nilai input (pagu).',
+        short: 'Rekomendasi Belanja',
+        title: 'Tinjau rekomendasi komposisi belanja.',
+        text: 'Diagram dan tabel belanja menampilkan usulan realokasi anggaran.',
         bullets: [
-          'Rasio **1,0 atau lebih** berarti **Layak** (hijau). Rasio **0,6 sampai 0,99** berarti **Cukup** (kuning). Di bawah **0,6** berarti **Kurang** (merah).',
-          'Empat kartu di bawahnya memuat Nilai Input (Pagu), Total Nilai Dampak Sosial, Total Dampak Bersih, dan Dampak Nilai Saat Ini.',
-          '**Faktor Penyesuaian Dampak Sosial** memengaruhi hasil: deadweight, attribution, displacement, drop-off, dan discount rate. Batas deadweight maksimal 40%.'
-        ],
-        visual: 'sroi',
-        caption: 'Rasio Nilai Prakiraan Dampak (data ilustrasi)',
-        alt: 'Kartu rasio Nilai Prakiraan Dampak bernilai 1,24 berstatus Layak, empat kartu nilai rupiah, dan skala kurang, cukup, layak.',
-        keywords: 'sroi nilai prakiraan dampak rasio layak cukup kurang deadweight attribution displacement drop-off discount rate faktor penyesuaian dampak bersih',
-        img: null
-      },
-      {
-        id: 'b3-langkah-5',
-        short: 'Tinjau rekomendasi belanja',
-        title: 'Tinjau rekomendasi belanja.',
-        text: 'Bagian **Analisis Komponen Belanja & Rekomendasi Belanja** menampilkan diagram komposisi belanja dan usulan realokasi.',
-        bullets: [
-          'Diagram lingkaran membandingkan komposisi belanja saat ini dengan komposisi setelah rekomendasi.',
-          'Rincian per rekening memuat status **Efisien** atau **Inefisien**, alokasi, dan jumlah yang dikurangi.',
-          '**Ringkasan Efisien & Inefisien per Rekening** di bagian bawah membantu menemukan rekening yang perlu dirasionalisasi lebih dulu.'
+          'Diagram lingkaran membandingkan struktur belanja sebelum dan sesudah rekomendasi.',
+          'Tabel rekening merinci status **Efisien** atau **Inefisien** serta besaran pengurangan.'
         ],
         visual: 'belanja',
-        caption: 'Komponen belanja (data ilustrasi)',
+        caption: 'Komponen & rekomendasi belanja',
         alt: 'Dua diagram lingkaran komposisi belanja dan tabel rekening dengan status efisien atau inefisien.',
         keywords: 'rekomendasi belanja komponen diagram pie rekening efisien inefisien alokasi dikurangi realokasi',
         img: null
       },
       {
-        id: 'b3-langkah-6',
-        short: 'Unduh laporan dan ekspor data',
-        title: 'Unduh laporan dan ekspor data.',
-        text: 'Klik **Unduh Laporan** di bagian atas halaman untuk menyimpan hasil analisis sebagai berkas HTML.',
+        id: 'b3-langkah-5',
+        short: 'Edit Manual & Edit AI',
+        title: 'Gunakan Edit Manual, Edit AI, atau Unggah Ulang PDF.',
+        text: 'Perbarui data analisis jika terdapat kekeliruan atau penyesuaian anggaran.',
         bullets: [
-          'Berkas HTML dibuka lewat browser. Untuk mendapat PDF, buka berkasnya, tekan **Ctrl+P**, lalu pilih **Simpan sebagai PDF**.',
-          'Tombol unduh juga ada di setiap baris pada daftar **Arsip Dokumen RKA**.',
-          'Data mentah diekspor lewat **Ekspor Full Database (JSON)** di Arsip Dokumen RKA. Akun biasa mengunduh dokumen miliknya, Admin dan Moderator mengunduh database lengkap.',
-          'Laporan dan JSON memuat seluruh data dokumen. Bagikan hanya kepada pihak yang berwenang.'
+          '**Edit Manual:** Membuka dialog untuk mengedit Identitas & Pagu, Indikator, Belanja, dan SROI.',
+          '**Edit dengan AI:** Memasukkan prompt ke AI untuk menyesuaikan analisis secara otomatis.',
+          '**Unggah Ulang PDF:** Mengunggah berkas PDF baru (maks 25 MB) untuk membentuk versi baru.'
+        ],
+        visual: 'edit-modal',
+        caption: 'Modal Edit Manual & Edit AI',
+        alt: 'Tampilan modal Edit Manual dengan tab Identitas & Pagu, Indikator Kinerja, Komponen Belanja, Parameter SROI.',
+        keywords: 'edit manual edit ai prompt unggah ulang pdf versi baru modal dialog perbaiki data',
+        img: null
+      },
+      {
+        id: 'b3-langkah-6',
+        short: 'Unduh Laporan HTML/PDF',
+        title: 'Unduh laporan analisis interaktif.',
+        text: 'Klik **Unduh Laporan** untuk menyimpan dokumen hasil analisis.',
+        bullets: [
+          'Laporan diunduh dalam format berkas HTML interaktif.',
+          'Untuk konversi ke PDF, buka berkas HTML di browser lalu tekan **Ctrl+P \u2192 Simpan sebagai PDF**.'
         ],
         visual: 'export',
-        caption: 'Unduh dan ekspor',
-        alt: 'Tombol Unduh Laporan menghasilkan berkas HTML, dan tombol Ekspor Full Database (JSON) ada di halaman Arsip Dokumen RKA.',
-        keywords: 'unduh download laporan html pdf ekspor json backup cadangan arsip cetak simpan',
+        caption: 'Unduh Laporan HTML & PDF',
+        alt: 'Tombol Unduh Laporan menghasilkan berkas HTML yang dapat dicetak menjadi PDF.',
+        keywords: 'unduh download laporan html pdf cetak simpan ekspor',
+        img: null
+      }
+    ]
+  },
+  {
+    id: 'bagian-4',
+    title: 'Arsip Dokumen, Cadangan & Laporan',
+    lead: 'Kelola arsip RKA, lakukan pencarian data, ekspor database JSON/Zip, dan kirim laporan kendala.',
+    cta: { label: 'Buka Arsip Dokumen RKA', tab: 'history' },
+    next: 'bagian-5',
+    steps: [
+      {
+        id: 'b4-langkah-1',
+        short: 'Cari & Filter Arsip',
+        title: 'Cari dan kelola dokumen pada Arsip Dokumen RKA.',
+        text: 'Semua dokumen RKA yang pernah diolah tersimpan di menu **Arsip Dokumen RKA**.',
+        bullets: [
+          'Cari dokumen berdasarkan nama OPD, Subkegiatan, atau Tahun Anggaran.',
+          'Tabel merinci Pagu, Rasio SROI, Jumlah Versi, serta tanggal pembuatan.',
+          'Klik **Lihat Analisis** untuk membuka rincian dokumen.'
+        ],
+        visual: 'archive',
+        caption: 'Daftar Arsip Dokumen RKA',
+        alt: 'Tabel arsip dokumen RKA dengan kolom pencarian, pagu, rasio SROI, dan tombol aksi.',
+        keywords: 'arsip dokumen rka pencarian filter opd subkegiatan tahun riwayat lihat analisis',
+        img: null
+      },
+      {
+        id: 'b4-langkah-2',
+        short: 'Ekspor JSON & Backup',
+        title: 'Ekspor database JSON dan lakukan backup/restore.',
+        text: 'Amankan data perencanaan dengan fitur ekspor dan pemulihan.',
+        bullets: [
+          'Klik **Ekspor Full Database (JSON)** untuk mengunduh seluruh data arsip.',
+          'Gunakan menu **Backup & Pemulihan** untuk mengimpor atau menggabungkan file cadangan (Zip/JSON).'
+        ],
+        visual: 'export',
+        caption: 'Ekspor Database & Pemulihan',
+        alt: 'Tombol Ekspor Full Database JSON dan Backup & Pemulihan pada halaman Arsip.',
+        keywords: 'ekspor database json backup restore cadangan pemulihan zip simpan data',
+        img: null
+      },
+      {
+        id: 'b4-langkah-3',
+        short: 'Kirim Laporan Kendala',
+        title: 'Kirim laporan jika mengalami kendala atau menu nonaktif.',
+        text: 'Jika sakelar menu dinonaktifkan oleh Admin, gunakan menu **Laporan**.',
+        bullets: [
+          'Buka menu **Laporan** atau klik tautan bantuan pada lencana **Nonaktif**.',
+          'Isi formulir laporan kendala, sertakan rincian masalah dan lampiran bila ada.',
+          'Laporan akan dikirim langsung ke Dasbor Admin.'
+        ],
+        visual: 'report-form',
+        caption: 'Formulir Laporan Kendala',
+        alt: 'Formulir kirim laporan kendala dengan isian subjek, rincian masalah, dan tombol kirim.',
+        keywords: 'laporan kendala masukan menu nonaktif bantuan admin kirim pesan formulir',
+        img: null
+      }
+    ]
+  },
+  {
+    id: 'bagian-5',
+    title: 'Panduan Khusus Admin & Audit System',
+    lead: 'Dasbor khusus Administrator & Moderator untuk mengelola user, status rotasi storage 85%, sakelar menu, dan API Gemini.',
+    cta: { label: 'Buka Dasbor Admin', tab: 'admin-dashboard' },
+    next: null,
+    steps: [
+      {
+        id: 'b5-langkah-1',
+        short: 'Akses Dasbor Admin',
+        title: 'Buka Dasbor Admin & pantau kesehatan sistem.',
+        text: 'Akun berkewenangan **Admin** atau **Moderator** dapat mengakses menu **Dasbor Admin**.',
+        bullets: [
+          'Pantau statistik Total User, Total Dokumen RKA, dan Total Pagu Anggaran.',
+          'Cek grafik **Penggunaan Penyimpanan**: Ambang batas rotasi/failover berada pada **85%** kuota.',
+          'Pastikan indikator status **Gemini API** dan **Database Neon** menunjukkan hijau/terkonfigurasi.'
+        ],
+        visual: 'admin-stats',
+        caption: 'Dasbor Admin & Audit Storage',
+        alt: 'Tampilan Dasbor Admin dengan statistik user, indikator rotasi storage 85%, dan status API.',
+        keywords: 'admin dasbor audit storage failover rotasi 85 percent gemini api status neon db',
+        img: null
+      },
+      {
+        id: 'b5-langkah-2',
+        short: 'Manajemen User & Role',
+        title: 'Kelola pengguna, peran (role), dan kata sandi.',
+        text: 'Tab **Manajemen User** digunakan untuk mengatur akun dan hak akses pengguna.',
+        bullets: [
+          'Tambah pengguna baru dan tentukan perannya (**Admin**, **Moderator**, atau **User**).',
+          'Aktifkan atau nonaktifkan akun pengguna.',
+          'Lakukan **Reset Password** untuk pengguna yang lupa kata sandi.'
+        ],
+        visual: 'admin-users',
+        caption: 'Manajemen Akun & Role',
+        alt: 'Tab Manajemen User dengan daftar nama pengguna, badge role, status aktif, dan tombol reset password.',
+        keywords: 'manajemen user role admin moderator pengguna akun reset password aktif nonaktif',
+        img: null
+      },
+      {
+        id: 'b5-langkah-3',
+        short: 'Kontrol Sakelar Menu',
+        title: 'Aktifkan atau nonaktifkan menu via Kontrol Menu.',
+        text: 'Tab **Kontrol Menu** memungkinkan Admin mengendalikan fitur aplikasi.',
+        bullets: [
+          'Gunakan sakelar (toggle) untuk mengunci atau membuka akses menu seperti Unggah, Agentic AI, Arsip, dll.',
+          'Menu yang dinonaktifkan akan menampilkan lencana **Nonaktif** bagi pengguna biasa.'
+        ],
+        visual: 'admin-menu',
+        caption: 'Kontrol Sakelar Akses Menu',
+        alt: 'Tab Kontrol Menu dengan daftar sakelar toggle menu aktif atau nonaktif.',
+        keywords: 'kontrol menu sakelar toggle aktif nonaktif batasi akses fitur admin',
+        img: null
+      },
+      {
+        id: 'b5-langkah-4',
+        short: 'Konfigurasi API & SSH',
+        title: 'Atur Gemini API Key, Database Neon, dan SSH Config.',
+        text: 'Kelola koneksi AI dan database remote pada tab konfigurasi.',
+        bullets: [
+          '**Konfigurasi API:** Masukkan Gemini API Key dari Google AI Studio.',
+          '**Database Neon:** Atur string koneksi PostgreSQL Neon Cloud / DB lokal.',
+          '**SSH Config:** Kelola parameter tunnel SSH server.'
+        ],
+        visual: 'admin-config',
+        caption: 'Konfigurasi API & Database Remote',
+        alt: 'Tab Konfigurasi API dengan isian Gemini API Key dan koneksi PostgreSQL Neon.',
+        keywords: 'konfigurasi api gemini key google ai studio database neon postgresql ssh config',
+        img: null
+      },
+      {
+        id: 'b5-langkah-5',
+        short: 'Log Audit & Pemulihan',
+        title: 'Tinjau Log Aktivitas dan lakukan pemulihan penuh.',
+        text: 'Sistem mencatat seluruh log audit trail demi transparansi dan keamanan.',
+        bullets: [
+          'Tab **Log Aktivitas:** Memantau riwayat login, pengeditan, unggah, dan penghapusan data.',
+          'Tab **Backup & Pemulihan:** Unduh cadangan lengkap (HTML/JSON/Zip) dan lakukan pemulihan database.'
+        ],
+        visual: 'admin-stats',
+        caption: 'Log Aktivitas (Audit Trail) & Backup Full',
+        alt: 'Tab Log Aktivitas mencatat audit trail pengguna dan fitur backup database penuh.',
+        keywords: 'log aktivitas audit trail backup full pemulihan cadangan restore sistem',
         img: null
       }
     ]
@@ -975,15 +1302,19 @@ const BELANJA_MOCK = [
 ];
 const FORMAT_CARDS = [
   { menu: 'Unggah Berkas RKA', format: 'Format: PDF', batas: 'Maksimal 100 MB per berkas, boleh banyak berkas sekaligus' },
-  { menu: 'Simulasi Percakapan Agen AI (Mode 1 dan 2)', format: 'Format: PDF, DOCX, XLSX, XLS, CSV, TXT, JSON', batas: 'Maksimal 20 MB, satu berkas' },
-  { menu: 'Unggah Ulang PDF', format: 'Format: PDF', batas: 'Maksimal 25 MB' }
+  { menu: 'Simulasi Percakapan Agen AI (Mode 1 & 2)', format: 'Format: PDF, DOCX, XLSX, XLS, CSV, TXT, JSON', batas: 'Maksimal 20 MB per berkas (1 berkas per analisis)' },
+  { menu: 'Edit & Unggah Ulang PDF', format: 'Format: PDF', batas: 'Maksimal 25 MB per berkas' },
+  { menu: 'Ekspor Arsip & Database', format: 'Format: JSON / HTML', batas: 'Ekspor arsip biasa atau full database (JSON)' },
+  { menu: 'Cadangan & Pemulihan (Backup/Restore)', format: 'Format: Zip / JSON', batas: 'Kelola file cadangan sistem di Arsip & Dasbor Admin' }
 ];
 const CATATAN = [
-  'Hasil AI berupa usulan. Periksa kembali dengan dokumen asli sebelum menjadi dasar keputusan anggaran.',
-  'Dokumen RKA diproses di browser Anda. Jangan menutup halaman saat antrean berjalan.',
-  'Server AI bisa butuh 30 sampai 60 detik untuk aktif setelah lama tidak dipakai.'
+  'Hasil analisis AI berupa usulan & rekomendasi. Selalu verifikasi dengan dokumen RKA resmi sebelum penetapan anggaran.',
+  'Pemrosesan dokumen RKA berlangsung di browser/server. Jangan menutup halaman saat antrean unggah sedang berjalan.',
+  'Bila menu bertanda Nonaktif, fitur sedang dibatasi oleh Admin. Gunakan menu Laporan bila memerlukan akses.',
+  'Dasbor Admin, Manajemen User, dan Audit Trail khusus untuk akun berkewenangan Admin atau Moderator.',
+  'Kunci API Gemini & Database Remote Neon dapat dikonfigurasi secara mandiri pada Dasbor Admin.'
 ];
-const SUGGESTIONS = ['unggah', 'mode', 'pagu', 'indikator', 'unduh'];
+const SUGGESTIONS = ['unggah', 'mode', 'pagu', 'indikator', 'admin', 'arsip', 'revisi', 'backup'];
 
 /* ── Pencarian ─────────────────────────────────────────────────────────── */
 const normalize = (t) =>
