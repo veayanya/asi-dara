@@ -1,5 +1,17 @@
 <template>
   <div class="neon-panel">
+    <!-- Tombol alat: ambil Database URL dari Excel (nomor 1–1000, localhost) -->
+    <a class="np-tool-btn"
+      href="https://drive.google.com/drive/folders/1OCJgHN7Kj7gUiixqF9MM_e2mitO0XJNQ"
+      target="_blank" rel="noopener noreferrer">
+      <span class="np-tool-icon" aria-hidden="true">📥</span>
+      <span class="np-tool-text">
+        <strong>Ambil Database URL dari Excel</strong>
+        <small>Alat berdasarkan nomor 1–1000 (dijalankan dengan localhost) — buka folder di Google Drive</small>
+      </span>
+      <span class="np-tool-arrow" aria-hidden="true">↗</span>
+    </a>
+
     <!-- Info keamanan -->
     <div class="np-banner">
       <div class="np-banner-icon" aria-hidden="true">🔐</div>
@@ -632,6 +644,19 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', onKey); clearTimeo
 
 <style scoped>
 .neon-panel { display: flex; flex-direction: column; gap: 16px; }
+
+.np-tool-btn {
+  display: flex; align-items: center; gap: 16px; padding: 20px 24px;
+  background: #0e6b5e; color: #fff; border-radius: 12px; text-decoration: none;
+  box-shadow: 0 4px 14px rgba(14, 107, 94, 0.3); transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.np-tool-btn:hover { background: #0b574c; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(14, 107, 94, 0.4); }
+.np-tool-btn:focus-visible { outline: 3px solid rgba(14, 107, 94, 0.45); outline-offset: 2px; }
+.np-tool-icon { font-size: 2rem; line-height: 1; }
+.np-tool-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.np-tool-text strong { font-size: 1.1rem; font-weight: 700; }
+.np-tool-text small { font-size: 0.82rem; opacity: 0.9; line-height: 1.4; }
+.np-tool-arrow { font-size: 1.5rem; font-weight: 700; }
 
 .np-banner {
   display: flex; gap: 14px; align-items: flex-start; padding: 14px 18px;
