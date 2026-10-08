@@ -11,7 +11,6 @@
       @open-diagnosis="showDiagnosisModal = true"
       @open-calculator="showCalculatorModal = true"
       @open-docs="showDocsModal = true"
-      @open-embed="showEmbedModal = true"
     />
 
     <!-- Main Chat Workspace -->
@@ -42,13 +41,6 @@
       @close="showDocsModal = false"
       @ask-doc="handleSendMessage"
     />
-
-    <EmbedModal
-      :is-open="showEmbedModal"
-      :current-api-key="apiKey"
-      @close="showEmbedModal = false"
-      @update:api-key="handleApiKeyUpdate"
-    />
   </div>
 </template>
 
@@ -59,7 +51,6 @@ import ChatContainer from './components/chat/ChatContainer.vue';
 import CalculatorModal from './components/calculator/CalculatorModal.vue';
 import DocumentModal from './components/documents/DocumentModal.vue';
 import DiagnosisModal from './components/diagnosis/DiagnosisModal.vue';
-import EmbedModal from './components/settings/EmbedModal.vue';
 import { processUserMessage } from './services/chatEngine.js';
 import confetti from 'canvas-confetti';
 import './cbb.css';
@@ -67,20 +58,10 @@ import './cbb.css';
 const isTyping = ref(false);
 const apiKey = ref(localStorage.getItem('bapperida_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '');
 
-function handleApiKeyUpdate(val) {
-  apiKey.value = val;
-  if (val) {
-    localStorage.setItem('bapperida_api_key', val);
-  } else {
-    localStorage.removeItem('bapperida_api_key');
-  }
-}
-
 // Modals
 const showDiagnosisModal = ref(false);
 const showCalculatorModal = ref(false);
 const showDocsModal = ref(false);
-const showEmbedModal = ref(false);
 
 const messages = ref([]);
 

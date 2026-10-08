@@ -26,19 +26,10 @@
       >
         <span>📚</span> Regulasi
       </button>
-
-      <button
-        id="btn-embed-open"
-        @click="$emit('open-embed')"
-        class="cbb-btn-primary"
-        style="padding: 0.45rem 0.95rem; font-size: 0.775rem;"
-      >
-        <span>⚡</span> Sematkan
-      </button>
     </PageHero>
 </template>
 
 <script setup>
 import PageHero from '@/components/PageHero.vue';
-defineEmits(['open-diagnosis', 'open-calculator', 'open-docs', 'open-embed']);
+defineEmits(['open-diagnosis', 'open-calculator', 'open-docs']);
 </script>

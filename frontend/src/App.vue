@@ -220,10 +220,10 @@ import AdminDashboard from './components/AdminDashboard.vue';
 
 // ── Kontak pembuat (tampil di footer) — ubah di sini ──────────────────
 const creator = {
-  name: 'NAMA PEMBUAT',
-  phone: '08xx-xxxx-xxxx',      // tampilan
-  phoneRaw: '08xxxxxxxxxx',     // untuk tautan tel: (tanpa spasi/strip)
-  email: 'email@contoh.com',
+  name: 'Eva',
+  phone: '+62 813-9362-6981',      // tampilan
+  phoneRaw: '+6281393626981',     // untuk tautan tel: (tanpa spasi/strip)
+  email: 'shokhifahtulj@gmail.com',
 };
 
 const {
