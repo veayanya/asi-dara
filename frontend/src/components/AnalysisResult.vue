@@ -816,6 +816,7 @@ import {
 Chart.register(ArcElement, Tooltip, Legend, PieController, DoughnutController);
 import { useAnalysis, computeSroi16Rules, cleanOpdName } from '../composables/useAnalysis';
 import { downloadAnalysisHtmlReport } from '@/utils/htmlReportGenerator';
+import { lengkapiRekeningProporsi } from '@/utils/rekeningLengkap';
 import AnalysisEditManualModal from './AnalysisEditManualModal.vue';
 import AnalysisEditAiModal from './AnalysisEditAiModal.vue';
 
@@ -1179,8 +1180,18 @@ const tambahList = computed(() =>
  (props.analysis.reallocationJustifications || []).filter((j) => j.aksi === 'TAMBAH')
 );
 
+// Rekening belanja dilengkapi sampai 100% pagu: sisa (di luar rincian utama) menjadi
+// SATU rekening sungguhan ber-status, bukan irisan sintetis "Lainnya" di grafik.
+const paguLengkap = computed(() => Number(props.analysis.originalPagu || props.analysis.pagu || 0));
+const rekeningAwalLengkap = computed(() =>
+ lengkapiRekeningProporsi(props.analysis.rekeningProporsi || [], paguLengkap.value)
+);
+const rekeningUsulanLengkap = computed(() =>
+ lengkapiRekeningProporsi(props.analysis.rekeningProporsiUsulan || [], paguLengkap.value)
+);
+
 const efficiencyList = computed(() => {
- const proporsi = props.analysis.rekeningProporsi || [];
+ const proporsi = rekeningAwalLengkap.value;
  const reallocs = props.analysis.reallocationJustifications || [];
 
  return proporsi.map(rek => {
@@ -1474,17 +1485,8 @@ const buildChartPalette = () => [
  resolveCssVar('--border-color-strong', '#C7DEDA'),
 ];
 
-const withLainnya = (dataset) => {
- if (!dataset || dataset.length === 0) return [];
- const sumPersen = dataset.reduce((s, d) => s + (Number(d.persen) || 0), 0);
- if (sumPersen < 99) {
- return [...dataset, { nama: 'Lainnya', persen: Number((100 - sumPersen).toFixed(1)) }];
- }
- return dataset;
-};
-
-const awalData = computed(() => withLainnya(props.analysis.rekeningProporsi || []));
-const usulanData = computed(() => withLainnya(props.analysis.rekeningProporsiUsulan || []));
+const awalData = computed(() => rekeningAwalLengkap.value);
+const usulanData = computed(() => rekeningUsulanLengkap.value);
 
 // ── Chart.js instances ───────────────────────────────────────────────
 const pieAwalEl = ref(null);

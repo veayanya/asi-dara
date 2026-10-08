@@ -4,6 +4,7 @@
 // Mendukung Ekspor untuk Semua Role (User, Moderator, Admin) serta Pemulihan Sistem (Restore)
 
 import { computeSroi16Rules, cleanOpdName } from '@/composables/useAnalysis';
+import { lengkapiRekeningProporsi } from '@/utils/rekeningLengkap';
 
 /**
  * Format angka ke Rupiah
@@ -944,7 +945,7 @@ export function generateHtmlBackup(backupPayload, isFullBackup = false) {
  const pagu = Number(doc.pagu || calc.valueOfInputs || 0);
  const indikatorList = Array.isArray(doc.indikatorKinerja) ? doc.indikatorKinerja : [];
  const kesesuaian = doc.kesesuaianAnggaran || null;
- const awalRaw = (doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [];
+ const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], Number(doc.originalPagu || doc.pagu || calc.valueOfInputs || 0));
  const reallocs = doc.reallocationJustifications || [];
 
  // Status efisiensi rekening

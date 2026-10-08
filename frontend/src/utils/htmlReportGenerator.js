@@ -3,6 +3,7 @@
 // Tampilan 100% SAMA PERSIS dengan UI/UX komponen AnalysisResult.vue
 
 import { computeSroi16Rules, cleanOpdName } from '@/composables/useAnalysis';
+import { lengkapiRekeningProporsi } from '@/utils/rekeningLengkap';
 
 export function generateAnalysisHtml(doc) {
  if (!doc) return '';
@@ -44,20 +45,14 @@ export function generateAnalysisHtml(doc) {
  const justifikasiOutcome = doc.justifikasiOutcome || doc.outcomeDesc || 'Program memberikan dampak sosial dan peningkatan taraf layanan masyarakat secara berkelanjutan.';
 
  // 3. Analisis Komponen Belanja & Rekomendasi Belanja
- const withLainnya = (dataset) => {
- if (!dataset || dataset.length === 0) return [];
- const sumPersen = dataset.reduce((s, d) => s + (Number(d.persen) || 0), 0);
- if (sumPersen < 99) {
- return [...dataset, { nama: 'Lainnya', persen: Number((100 - sumPersen).toFixed(1)) }];
- }
- return dataset;
- };
+ // Sisa pagu di luar rincian utama dijadikan satu rekening sungguhan (bukan irisan sintetis),
+ // sehingga ikut dinilai di Status Efisiensi & Ringkasan Efektif/Inefektif → total 100%.
+ const paguLengkap = Number(doc.originalPagu || doc.pagu || 0);
+ const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], paguLengkap);
+ const usulanRaw = lengkapiRekeningProporsi((doc.rekeningProporsiUsulan && doc.rekeningProporsiUsulan.length > 0) ? doc.rekeningProporsiUsulan : (doc.rekeningProporsi || []), paguLengkap);
 
- const awalRaw = (doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [];
- const usulanRaw = (doc.rekeningProporsiUsulan && doc.rekeningProporsiUsulan.length > 0) ? doc.rekeningProporsiUsulan : awalRaw;
-
- const awalData = withLainnya(awalRaw);
- const usulanData = withLainnya(usulanRaw);
+ const awalData = awalRaw;
+ const usulanData = usulanRaw;
  const reallocs = doc.reallocationJustifications || [];
  const kurangiList = reallocs.filter(j => j.aksi === 'KURANGI');
  const tambahList = reallocs.filter(j => j.aksi === 'TAMBAH');
