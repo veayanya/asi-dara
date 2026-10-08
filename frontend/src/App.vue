@@ -136,13 +136,6 @@
  <MainDashboard v-else />
  </section>
 
- <section v-show="currentTab === 'pra-rka'" class="page-section active">
- <MenuNonaktif v-if="isMenuBlocked('pra-rka')" />
- <template v-else>
- <PageHero icon="clipboard-list" title="Buat Pra RKA" subtitle="Susun rancangan Renja PD" />
- <PraRka />
- </template>
- </section>
 
  <section v-show="currentTab === 'petunjuk'" class="page-section active">
    <MenuNonaktif v-if="isMenuBlocked('petunjuk')" />
@@ -209,7 +202,6 @@ import MenuNonaktif from './components/MenuNonaktif.vue';
 import BantuanPertanyaan from './components/BantuanPertanyaan.vue';
 import PetunjukPenggunaan from './components/PetunjukPenggunaan.vue';
 import AdminDashboard from './components/AdminDashboard.vue';
-import PraRka from './modules/pra-rka/PraRka.vue';
 
 const {
  currentTab,

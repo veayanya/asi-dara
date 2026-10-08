@@ -158,7 +158,6 @@ const pageMeta = {
  history: { title: 'Arsip Dokumen RKA', section: 'Arsip Dokumen RKA' },
  config: { title: 'Pengaturan', section: 'Pengaturan' },
  report: { title: 'Laporan', section: 'Laporan' },
- 'pra-rka': { title: 'Buat Pra RKA', section: 'Buat Pra RKA' },
  petunjuk: { title: 'Petunjuk Penggunaan', section: 'Petunjuk Penggunaan' },
  faq: { title: 'Bantuan & Pertanyaan', section: 'Bantuan & Pertanyaan' },
 };
