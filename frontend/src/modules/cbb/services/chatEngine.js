@@ -15,19 +15,26 @@ import {
   formatCurrency, 
   formatPercent 
 } from './calculationEngine.js';
+import { computeSroi16Rules } from '../../../composables/useAnalysis.js';
 
 // Pre-packaged responses and dynamic contextual engine
-export async function processUserMessage(rawMessage, customApiKey = '') {
+export async function processUserMessage(rawMessage, customApiKey = '', selectedDoc = null) {
   const query = rawMessage.trim().toLowerCase();
 
-  // If user provided custom API Key, try live LLM API call first
+  // If user provided custom API Key, try live LLM API call first with selectedDoc context
   if (customApiKey && customApiKey.trim().length > 10) {
     try {
-      const liveRes = await callExternalLLM(rawMessage, customApiKey);
+      const liveRes = await callExternalLLM(rawMessage, customApiKey, selectedDoc);
       if (liveRes) return liveRes;
     } catch (err) {
       console.warn('External API call failed, falling back to local engine:', err);
     }
+  }
+
+  // 0. Pertanyaan seputar Arsip Dokumen ASI DARA yang sedang dipilih
+  if (selectedDoc) {
+    const docQueryResponse = processSelectedDocQuery(query, rawMessage, selectedDoc);
+    if (docQueryResponse) return docQueryResponse;
   }
 
   // 1. Skenario Hipotesis / Simulasi Pengguna
@@ -471,48 +478,116 @@ function formatFallbackResponse(rawMessage, persona) {
   };
 }
 
+function processSelectedDocQuery(query, rawMessage, selectedDoc) {
+  const title = selectedDoc.namaDokumen || selectedDoc.subKegiatan || selectedDoc.program || selectedDoc.id || 'Dokumen RKA';
+  const opd = selectedDoc.opd || selectedDoc.opdRaw || 'OPD Kabupaten Cirebon';
+  const pagu = selectedDoc.pagu || selectedDoc.alokasi || selectedDoc.valueOfInputs || 0;
+  
+  let metrics = null;
+  try {
+    metrics = computeSroi16Rules ? computeSroi16Rules(selectedDoc) : null;
+  } catch (e) {
+    metrics = null;
+  }
+
+  const ratioText = metrics?.sroiRatioWithBanding || selectedDoc.sroiRatioWithBanding || `${selectedDoc.sroi || selectedDoc.sroiRatio || '1.0'} : 1`;
+  const status = metrics?.sroiStatus || selectedDoc.sroiStatus || 'Nilai Dampak Teranalisis';
+  const shortLabel = metrics?.shortLabel || selectedDoc.shortLabel || ((selectedDoc.sroi || selectedDoc.sroiRatio || 0) >= 1.0 ? 'Layak' : 'Keringanan/Cukup');
+  const interpretation = metrics?.sroiInterpretation || `Setiap Rp1 investasi menghasilkan Rp${selectedDoc.sroi || selectedDoc.sroiRatio || 1} nilai manfaat sosial.`;
+
+  const deadweight = metrics?.deadweight ?? selectedDoc.deadweight ?? 15;
+  const attribution = metrics?.attribution ?? selectedDoc.attribution ?? 20;
+  const displacement = metrics?.displacement ?? selectedDoc.displacement ?? 10;
+  const dropOff = metrics?.dropOff ?? selectedDoc.dropOff ?? 5;
+  const unintended = selectedDoc.unintendedOutcomes || selectedDoc.unintended || 'Tidak ditemukan dampak samping negatif yang signifikan.';
+
+  const alasan = selectedDoc.alasan || selectedDoc.alasanKelayakan || selectedDoc.kesimpulan || 'Nilai manfaat sosial dihitung dari estimasi efisiensi waktu pelayanan, peningkatan kualifikasi SDM, serta percepatan pencapaian IKU RPJMD Kabupaten Cirebon.';
+  const rekomendasi = selectedDoc.rekomendasi || selectedDoc.rekomendasiAI || 'Pastikan dokumentasi bukti fisik kegiatan dan laporan serapan SP2D ter-upload secara berkala ke SIPD-RI.';
+
+  // Match 5 faktor query
+  if (query.includes('5 faktor') || query.includes('deadweight') || query.includes('attribution') || query.includes('displacement') || query.includes('drop')) {
+    return {
+      type: 'calculation',
+      badge: `Faktor Penyesuaian Nilai Prakiraan Dampak — ${title}`,
+      data: [
+        { label: 'Deadweight', value: `${deadweight}%` },
+        { label: 'Attribution', value: `${attribution}%` },
+        { label: 'Displacement', value: `${displacement}%` },
+        { label: 'Drop-off (Tahun Ke-2+)', value: `${dropOff}%` }
+      ],
+      text: `### ⚖️ Rincian 5 Faktor Penyesuaian Nilai Prakiraan Dampak Dokumen Arsip\n\n` +
+        `**Dokumen:** \`${title}\` (${opd})\n\n` +
+        `1. **Deadweight (${deadweight}%):** Estimasi ${deadweight}% dampak sosial yang akan tetap terjadi secara alami tanpa adanya intervensi program ini.\n` +
+        `2. **Attribution (${attribution}%):** Sebesar ${attribution}% kontribusi pencapaian merupakan hasil sinergi lintas OPD / instansi pendukung.\n` +
+        `3. **Displacement (${displacement}%):** Sebesar ${displacement}% potensi pergeseran dampak yang terkelola tanpa menimbulkan masalah di sektor lain.\n` +
+        `4. **Drop-off (${dropOff}%):** Estimasi penurunan tingkat keberlanjutan dampak sebesar ${dropOff}% per tahun di masa depan.\n` +
+        `5. **Unintended Outcomes:** ${unintended}`
+    };
+  }
+
+  // Match rekomendasi query
+  if (query.includes('rekomendasi') || query.includes('perbaikan') || query.includes('saran strategis')) {
+    return {
+      type: 'text',
+      badge: `Rekomendasi Strategis AI — ${title}`,
+      text: `### 📝 Rekomendasi Strategis AI untuk Dokumen Arsip\n\n` +
+        `**Dokumen:** \`${title}\`\n` +
+        `**Perangkat Daerah:** ${opd}\n` +
+        `**Rasio Nilai Prakiraan Dampak:** **${ratioText}** (${shortLabel})\n\n` +
+        `**Rekomendasi Utama AI:**\n${rekomendasi}\n\n` +
+        `💡 *Langkah Tindak Lanjut:* Koordinasikan dengan Tim Evaluasi Bapperida untuk pembaruan data realisasi keluaran.`
+    };
+  }
+
+  // Default / Alasan SROI query
+  return {
+    type: 'calculation',
+    badge: `Analisis Arsip Dokumen ASI DARA — ${title}`,
+    formula: `Rasio Nilai Prakiraan Dampak = Total Present Value Impact / Total Investment`,
+    data: [
+      { label: 'Dokumen Arsip', value: title },
+      { label: 'OPD Penanggung Jawab', value: opd },
+      { label: 'Pagu Alokasi Investasi', value: `Rp ${(pagu).toLocaleString('id-ID')}` },
+      { label: 'Rasio Nilai Prakiraan Dampak', value: ratioText },
+      { label: 'Predikat Kelayakan', value: `${shortLabel} (${status})` }
+    ],
+    interpretasi: interpretation,
+    text: `### 📁 Analisis & Alasan Rasio Nilai Prakiraan Dampak Dokumen Arsip ASI DARA\n\n` +
+      `**Dokumen:** \`${title}\`\n` +
+      `**Perangkat Daerah:** ${opd}\n` +
+      `**Pagu Investasi:** Rp ${(pagu).toLocaleString('id-ID')}\n\n` +
+      `---\n\n` +
+      `#### 📊 Rasio & Predikat Nilai Prakiraan Dampak:\n` +
+      `• **Rasio Nilai Prakiraan Dampak:** **${ratioText}** (${shortLabel})\n` +
+      `• **Interpretasi:** ${interpretation}\n\n` +
+      `#### 💡 Alasan & Kausalitas Kelayakan:\n` +
+      `${alasan}\n\n` +
+      `#### ⚖️ Ringkasan 5 Faktor Penyesuaian:\n` +
+      `• **Deadweight:** ${deadweight}% | **Attribution:** ${attribution}% | **Displacement:** ${displacement}%\n` +
+      `• **Drop-off:** ${dropOff}% | **Dampak Tak Terduga:** ${unintended}\n\n` +
+      `#### 📝 Rekomendasi Strategis AI:\n` +
+      `${rekomendasi}`
+  };
+}
+
 // Live LLM caller if API Key provided
-async function callExternalLLM(prompt, persona, apiKey) {
-  const personaContext = persona === 'warga'
-    ? 'Lawan bicara adalah warga umum/masyarakat — gunakan bahasa santai-ramah, hindari jargon teknis berlebihan, fokus pada manfaat nyata yang bisa dirasakan warga.'
-    : persona === 'opd'
-    ? 'Lawan bicara adalah staf OPD/Perangkat Daerah mitra — boleh lebih teknis, bahas koordinasi RKA, sinkronisasi Renja-RKPD, input SIPD-RI, dan analisis kinerja anggaran.'
-    : 'Lawan bicara adalah ASN internal Bapperida/perencana — boleh sepenuhnya teknis, gunakan referensi hukum spesifik, bahas cascading IKU/IKD, tahapan evaluasi Daledang, nomenklatur Permendagri 90/2019.';
+async function callExternalLLM(prompt, apiKey, selectedDoc = null) {
+  const docContext = selectedDoc ? `
+DOKUMEN ARSIP DENGAN KONTEKS PILIHAN PENGGUNA (ASI DARA):
+- Nama Dokumen: ${selectedDoc.namaDokumen || selectedDoc.subKegiatan || selectedDoc.program || selectedDoc.id}
+- OPD: ${selectedDoc.opd || selectedDoc.opdRaw || '-'}
+- Pagu Investasi: Rp ${(selectedDoc.pagu || selectedDoc.alokasi || 0).toLocaleString('id-ID')}
+- Rasio Nilai Prakiraan Dampak: ${selectedDoc.sroiRatioWithBanding || selectedDoc.sroiRatio || selectedDoc.sroi || '1.0'}
+- Status / Predikat: ${selectedDoc.sroiStatus || selectedDoc.shortLabel || 'Layak'}
+- Alasan / Justifikasi: ${selectedDoc.alasan || selectedDoc.alasanKelayakan || selectedDoc.kesimpulan || 'Dampak sosial mengacu pada indikator IKU'}
+- Rekomendasi AI: ${selectedDoc.rekomendasi || selectedDoc.rekomendasiAI || '-'}
+` : '';
 
-  const fullSystemPrompt = `Kamu adalah asisten AI serba-bisa (seperti chatbot AI pada umumnya — bisa ngobrol, menjelaskan, menghitung, membantu menulis, brainstorming, dll), yang KEBETULAN punya keahlian mendalam soal Badan Perencanaan, Penelitian, dan Pengembangan Daerah (Bapperida) Kabupaten Cirebon.
-
-KONTEKS LAWAN BICARA: ${personaContext}
-
-PRINSIP INTERAKSI — WAJIB DIIKUTI:
-1. Jawab pertanyaan APAPUN secara wajar seperti chatbot AI biasa — tidak semua pertanyaan harus dikaitkan ke topik Bapperida.
-2. Kalau pertanyaannya menyentuh perencanaan daerah, anggaran, RKA, indikator kinerja, dokumen daerah, atau hal-hal Bapperida — di situlah keahlian khususmu berperan.
-3. JANGAN kaku pakai format template (poin 1-5, disclaimer panjang, heading besar) untuk SETIAP jawaban. Sesuaikan format: obrolan santai → jawab santai; pertanyaan teknis → boleh terstruktur, tapi tetap ringkas dan enak dibaca.
-4. Pertanyaan dengan kata "misal", "seandainya", "contohnya", "menurutmu kalau" → ini ANALISIS/OPINI biasa, JAWAB LANGSUNG, jangan dianggap permintaan data resmi.
-5. Disclaimer atau arahan ke sumber resmi HANYA dipakai kalau user memang menanyakan data aktual/riil suatu instansi tanpa memberi angkanya sendiri. Di luar itu, jawab to the point.
-
-KEAHLIAN KHUSUS BAPPERIDA:
-
-[TUPOKSI] Bapperida: perencanaan pembangunan jangka panjang (RPJPD 20 thn), menengah (RPJMD 5 thn), tahunan (RKPD 1 thn); koordinasi lintas OPD; litbang; monitoring-evaluasi; sinkronisasi pusat-daerah.
-
-[DOKUMEN PERENCANAAN] RPJPD, RPJMD, RKPD, Renstra OPD, Renja OPD, KUA-PPAS, Musrenbang (Desa → Kecamatan → Forum OPD → Kabupaten → Provinsi).
-
-[REGULASI] UU 25/2004, UU 23/2014, Permendagri 86/2017, Permendagri 90/2019, Kepmendagri 690.900-327 Tahun 1996.
-
-[RUMUS INDIKATOR]
-- Pertumbuhan Ekonomi (PDRB ADHK) = ((PDRB-n − PDRB-n1) / PDRB-n1) × 100%
-- IPM = dimensi kesehatan, pendidikan, pengeluaran (metodologi BPS terbaru)
-- Realisasi Anggaran (%) = (Realisasi / Pagu) × 100%
-- Efektivitas (%) = (Realisasi Output / Target Output) × 100%
-  Skala Kepmendagri 690/1996: >100% Sangat Efektif | 90-100% Efektif | 80-<90% Cukup Efektif | 60-<80% Kurang Efektif | <60% Tidak Efektif
-- Efisiensi (%) = (Realisasi Anggaran / Pagu) ÷ (Realisasi Output / Target Output) × 100%
-  Skala: <60% Sangat Efisien | 60-<80% Efisien | 80-<90% Cukup Efisien | 90-100% Kurang Efisien | >100% Tidak Efisien
-- SROI = Total Nilai Manfaat Sosial / Total Investasi; jika proxy finansial belum diberikan user, TANYA BALIK dulu.
-
-[SKENARIO HIPOTETIS] Kalau user memberi angkanya sendiri ("misal RKA-nya 19M, realisasi 78%"), ini BUKAN permintaan data resmi — HITUNG dan ANALISIS langsung menggunakan rumus di atas. Tambahkan catatan singkat bahwa ini analisis skenario, bukan data aktual, tapi catatan itu hanya pelengkap — BUKAN alasan untuk menolak menjawab.
-
-[DIAGNOSIS PERMASALAHAN] Kenali dan kategorikan: (1) Perencanaan & Sinkronisasi Dokumen, (2) Data & Pelaporan, (3) Anggaran & Kinerja RKA/DPA, (4) Koordinasi Lintas OPD, (5) Layanan Masyarakat & Musrenbang, (6) Regulasi & Kepatuhan. Jelaskan penyebab umum secara edukatif (bukan menuduh), arahkan ke pihak berwenang yang tepat.
-
-[BATASAN] Jangan memberi opini politik atau menilai kebijakan kepala daerah secara subjektif. Dugaan korupsi/sengketa hukum → arahkan ke Inspektorat atau SP4N-LAPOR!, jangan berspekulasi. Jangan mengarang angka aktual yang tidak diberikan user.`;
+  const fullSystemPrompt = `Kamu adalah asisten AI serba-bisa yang punya keahlian mendalam soal Bapperida Kabupaten Cirebon dan Analisis Valuasi Nilai Prakiraan Dampak ASI DARA.
+${docContext}
+PRINSIP INTERAKSI:
+1. Apabila pengguna menanyakan alasan, Nilai Prakiraan Dampak, atau detail dokumen arsip yang sedang dipilih, jawab secara mendalam berdasarkan konteks dokumen di atas.
+2. Jawab pertanyaan lain dengan ramah dan profesional.`;
 
   const modelsToTry = ['gemini-2.5-flash', 'gemini-flash-latest'];
 
