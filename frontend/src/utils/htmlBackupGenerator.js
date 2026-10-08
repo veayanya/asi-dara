@@ -945,7 +945,7 @@ export function generateHtmlBackup(backupPayload, isFullBackup = false) {
  const pagu = Number(doc.pagu || calc.valueOfInputs || 0);
  const indikatorList = Array.isArray(doc.indikatorKinerja) ? doc.indikatorKinerja : [];
  const kesesuaian = doc.kesesuaianAnggaran || null;
- const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], Number(doc.originalPagu || doc.pagu || calc.valueOfInputs || 0));
+ const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], Number(doc.originalPagu || doc.pagu || calc.valueOfInputs || 0), { reallocs: doc.reallocationJustifications });
  const reallocs = doc.reallocationJustifications || [];
 
  // Status efisiensi rekening

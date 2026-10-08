@@ -1184,10 +1184,10 @@ const tambahList = computed(() =>
 // SATU rekening sungguhan ber-status, bukan irisan sintetis "Lainnya" di grafik.
 const paguLengkap = computed(() => Number(props.analysis.originalPagu || props.analysis.pagu || 0));
 const rekeningAwalLengkap = computed(() =>
- lengkapiRekeningProporsi(props.analysis.rekeningProporsi || [], paguLengkap.value)
+ lengkapiRekeningProporsi(props.analysis.rekeningProporsi || [], paguLengkap.value, { reallocs: props.analysis.reallocationJustifications })
 );
 const rekeningUsulanLengkap = computed(() =>
- lengkapiRekeningProporsi(props.analysis.rekeningProporsiUsulan || [], paguLengkap.value)
+ lengkapiRekeningProporsi(props.analysis.rekeningProporsiUsulan || [], paguLengkap.value, { reallocs: props.analysis.reallocationJustifications })
 );
 
 const efficiencyList = computed(() => {

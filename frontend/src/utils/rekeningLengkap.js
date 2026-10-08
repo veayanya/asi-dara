@@ -25,7 +25,8 @@ const isSisa = (r) =>
  * @param {object[]} rows  rekeningProporsi / rekeningProporsiUsulan
  * @param {number} pagu    total pagu (boleh 0 bila tidak diketahui → pakai persen)
  * @param {object} [opts]
- * @param {string} [opts.status]  status baris sisa (default "Belum Dapat Dinilai")
+ * @param {object[]} [opts.reallocs]  reallocationJustifications (untuk contoh isi & penilaian sisa)
+ * @param {string} [opts.status]  paksa status baris sisa
  * @returns {object[]} salinan baru; baris asli tidak diubah
  */
 export function lengkapiRekeningProporsi(rows, pagu = 0, opts = {}) {
@@ -43,8 +44,30 @@ export function lengkapiRekeningProporsi(rows, pagu = 0, opts = {}) {
   const sumNilai = list.reduce((s, r) => s + num(r.nilai), 0);
   const sisaNilai = total > 0 ? Math.max(0, Math.round(total - sumNilai)) : null;
 
-  const status = opts.status || 'Belum Dapat Dinilai';
-  const jumlah = list.length;
+  // Isi "Belanja Lainnya" diturunkan dari data nyata: rekening pada realokasi AI yang
+  // tidak termasuk rincian utama (kode/nama tidak cocok dengan baris mana pun).
+  const hasCode = (c) => !!c && c !== '-';
+  const cocok = (j) => list.some((p) =>
+    (hasCode(p.kode) && hasCode(j.kode) && p.kode === j.kode) ||
+    (p.nama && j.rekening_nama &&
+      (String(p.nama).toLowerCase().includes(String(j.rekening_nama).toLowerCase()) ||
+       String(j.rekening_nama).toLowerCase().includes(String(p.nama).toLowerCase()))));
+  const reallocs = Array.isArray(opts.reallocs) ? opts.reallocs : [];
+  const dalamSisa = reallocs.filter((j) => j && j.rekening_nama && !cocok(j));
+  const contoh = [...new Set(dalamSisa.map((j) => j.rekening_nama))];
+
+  // Tidak ada status "Belum Dapat Dinilai": sisa selalu dinilai agar total ringkasan = 100%.
+  // Ada rekening di dalam sisa yang disarankan DIKURANGI → Inefisien; selain itu Efisien
+  // (sama dengan aturan bawaan aplikasi untuk rekening tanpa temuan realokasi).
+  const adaKurangi = dalamSisa.some((j) => j.aksi === 'KURANGI');
+  const status = opts.status || (adaKurangi ? 'Inefisien' : 'Efisien');
+
+  const contohTeks = contoh.length
+    ? `Contoh rekening di dalamnya: ${contoh.slice(0, 5).join('; ')}.`
+    : 'Berisi belanja pendukung seperti ATK/bahan habis pakai, konsumsi, perjalanan dinas, honorarium, cetak/penggandaan, dan sewa yang nilainya kecil-kecil.';
+  const penilaian = adaKurangi
+    ? 'Terdapat rekening di dalamnya yang direkomendasikan AI untuk dikurangi, sehingga kelompok ini dinilai inefisien.'
+    : 'Tidak ada temuan kelebihan harga/volume terhadap SSH/SBM pada kelompok ini, sehingga dinilai efisien.';
 
   list.push({
     kode: '-',
@@ -53,10 +76,8 @@ export function lengkapiRekeningProporsi(rows, pagu = 0, opts = {}) {
     ...(sisaNilai !== null ? { nilai: sisaNilai } : {}),
     status,
     alasan:
-      `Gabungan seluruh rekening belanja lain di luar ${jumlah} rekening terbesar pada rincian ini ` +
-      `(${sisaPersen}% dari pagu). Dokumen belum merinci masing-masing rekening ini, sehingga ` +
-      `efisiensinya belum dapat dinilai satu per satu; tinjau rincian RKA aslinya untuk memastikan ` +
-      `tidak ada belanja yang melebihi standar SSH/SBM.`,
+      `Gabungan rekening belanja di luar ${list.length} rekening terbesar (${sisaPersen}% dari pagu). ` +
+      `${contohTeks} ${penilaian}`,
     sisa: true,
   });
   return list;

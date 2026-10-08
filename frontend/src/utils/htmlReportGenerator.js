@@ -48,8 +48,8 @@ export function generateAnalysisHtml(doc) {
  // Sisa pagu di luar rincian utama dijadikan satu rekening sungguhan (bukan irisan sintetis),
  // sehingga ikut dinilai di Status Efisiensi & Ringkasan Efektif/Inefektif → total 100%.
  const paguLengkap = Number(doc.originalPagu || doc.pagu || 0);
- const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], paguLengkap);
- const usulanRaw = lengkapiRekeningProporsi((doc.rekeningProporsiUsulan && doc.rekeningProporsiUsulan.length > 0) ? doc.rekeningProporsiUsulan : (doc.rekeningProporsi || []), paguLengkap);
+ const awalRaw = lengkapiRekeningProporsi((doc.rekeningProporsi && doc.rekeningProporsi.length > 0) ? doc.rekeningProporsi : [], paguLengkap, { reallocs: doc.reallocationJustifications });
+ const usulanRaw = lengkapiRekeningProporsi((doc.rekeningProporsiUsulan && doc.rekeningProporsiUsulan.length > 0) ? doc.rekeningProporsiUsulan : (doc.rekeningProporsi || []), paguLengkap, { reallocs: doc.reallocationJustifications });
 
  const awalData = awalRaw;
  const usulanData = usulanRaw;
