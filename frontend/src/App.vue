@@ -156,6 +156,21 @@
  </section>
 
  </div>
+
+ <!-- Footer kontak pembuat -->
+ <footer class="app-footer">
+ <span class="app-footer-item">
+ <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+ <a :href="'tel:' + creator.phoneRaw">{{ creator.phone }}</a>
+ <span class="app-footer-name">({{ creator.name }})</span>
+ </span>
+ <span class="app-footer-sep" aria-hidden="true">•</span>
+ <span class="app-footer-item">
+ <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+ <a :href="'mailto:' + creator.email">{{ creator.email }}</a>
+ <span class="app-footer-name">({{ creator.name }})</span>
+ </span>
+ </footer>
  </main>
 
  <!-- Reactive Notifications Container -->
@@ -202,6 +217,14 @@ import MenuNonaktif from './components/MenuNonaktif.vue';
 import BantuanPertanyaan from './components/BantuanPertanyaan.vue';
 import PetunjukPenggunaan from './components/PetunjukPenggunaan.vue';
 import AdminDashboard from './components/AdminDashboard.vue';
+
+// ── Kontak pembuat (tampil di footer) — ubah di sini ──────────────────
+const creator = {
+  name: 'NAMA PEMBUAT',
+  phone: '08xx-xxxx-xxxx',      // tampilan
+  phoneRaw: '08xxxxxxxxxx',     // untuk tautan tel: (tanpa spasi/strip)
+  email: 'email@contoh.com',
+};
 
 const {
  currentTab,
@@ -316,6 +339,40 @@ watch([currentTab, notificationsList, isLoggedIn], () => {
 <style scoped>
 .app-root {
  min-height: 100vh;
+}
+
+/* Footer kontak pembuat */
+.app-footer {
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ justify-content: center;
+ gap: 6px 14px;
+ padding: 12px 24px;
+ font-size: 0.8rem;
+ color: var(--text-muted);
+ background: var(--bg-secondary, transparent);
+ border-top: 1px solid var(--border-color);
+}
+.app-footer-item {
+ display: inline-flex;
+ align-items: center;
+ gap: 6px;
+}
+.app-footer-item a {
+ color: var(--text-secondary);
+ text-decoration: none;
+}
+.app-footer-item a:hover {
+ color: var(--primary-color);
+ text-decoration: underline;
+}
+.app-footer-name {
+ font-weight: 600;
+ color: var(--text-secondary);
+}
+.app-footer-sep {
+ opacity: 0.5;
 }
 
 .wake-overlay {
