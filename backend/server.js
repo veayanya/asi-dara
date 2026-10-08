@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getActiveSsh } from './utils/sshStorage.js';
-import { generateContentWithFallback, parseAiJson } from './utils/geminiHelper.js';
+import { generateContentWithFallback, parseAiJson, parseAiJsonArraySalvage } from './utils/geminiHelper.js';
 import { parseRkaHeuristic } from './utils/rkaFallbackParser.js';
 import { requireAuth, requireRole, optionalAuth, generateToken, setAuthCookie, clearAuthCookie, extractToken, JWT_SECRET } from './auth/authMiddleware.js';
 import {
@@ -1098,9 +1098,7 @@ Instruksi Ekstraksi & Penalaran Tambahan:
  - Total nilai_dikurangi harus sama atau setara dengan total nilai_ditambah.
 5. Ekstraksi Anggaran per Tahun (anggaran_tahunan): Ekstrak setiap baris { "tahun": <angka tahun>, "jumlah": <angka rupiah tanpa titik> } dan tentukan "tahun_rencana". Nilai "pagu" HARUS SAMA dengan "jumlah" pada tahun_rencana.
 6. Ekstraksi Indikator & Tolok Ukur Kinerja (indikator_kinerja): Ekstrak baris Tujuan (Ultimate), Sasaran (Intermediate), Program (Immediate), Kegiatan (Immediate), Sub Kegiatan (Output), Kelompok Sasaran. { "level": "...", "tolok_ukur": "...", "target": "..." }.
-   BACA SEMUA KEGIATAN & SUB KEGIATAN (WAJIB): dokumen dapat memuat hingga 100 Kegiatan dan hingga 100 Sub Kegiatan. Telusuri SELURUH teks dari awal sampai akhir dan buat SATU baris indikator_kinerja untuk SETIAP Kegiatan (Immediate) dan SETIAP Sub Kegiatan (Output) yang tertulis, sesuai urutan di dokumen. DILARANG menggabungkan, meringkas, memilih sebagian, atau berhenti di tengah; bila ada lebih dari 100, ambil 100 pertama untuk masing-masing level.
-   RINCIAN ISI (WAJIB untuk baris "Kegiatan (Immediate)" DAN "Sub Kegiatan (Output)"): tambahkan properti "rincian": [ { "nama": "...", "isi": "..." } ] yang memuat SEMUA rincian yang tertulis di dokumen untuk kegiatan/sub kegiatan tersebut — jangan dipotong, dibatasi jumlahnya, atau diringkas. Contoh: bila target "2 Laporan", buat item untuk tiap laporan/dokumen yang disebut (mis. jenis rapat/konsultasi, periode, pihak terkait) dan "isi" berupa komponen/uraian yang membentuknya; bila dokumen menyebut lebih banyak rincian daripada angka target, tetap tulis semuanya. Ambil HANYA dari teks dokumen (uraian Kegiatan/Sub Kegiatan, keterangan/spesifikasi pada rincian belanja, nama rekening & komponen belanja yang terkait). DILARANG mengarang nama, tanggal, atau angka yang tidak ada di dokumen; bila dokumen tidak merinci, isi "isi" dengan "Tidak dirinci pada dokumen". Baris level lain (Tujuan, Sasaran, Program, Kelompok Sasaran) tidak perlu "rincian".
-   JUMLAH RINCIAN HARUS SAMA DENGAN ANGKA TARGET (WAJIB): bila target berupa angka (mis. "44 Organisasi", "4 Organisasi", "110 Orang"), jumlah item "rincian" HARUS persis sebanyak angka itu. Satu item = satu satuan yang dihitung pada target (satu organisasi, satu kegiatan, satu laporan), BUKAN satu baris belanja. Contoh: target "44 Organisasi" -> 44 item (Organisasi 1 ... Organisasi 44); target "4 Organisasi" -> 4 item. Gunakan nama asli yang tertulis di dokumen; bila dokumen hanya menyebut sebagian, tulis yang disebut lalu lengkapi sisanya dengan nama "<satuan> ke-N" dan isi "Tidak dirinci pada dokumen" sampai jumlahnya sama dengan target. Jangan mencampur isi "Kegiatan" dengan isi "Sub Kegiatan": rincian Kegiatan hanya untuk satuan target Kegiatan, rincian Sub Kegiatan hanya untuk satuan target Sub Kegiatan.
+   Untuk level "Kegiatan (Immediate)" dan "Sub Kegiatan (Output)" cukup tulis SATU baris ringkasan masing-masing (tanpa "rincian"); seluruh daftar Kegiatan & Sub Kegiatan diekstrak terpisah oleh proses lain dan akan menggantikan baris ini.
 7. Analisis Kesesuaian Anggaran Tahun Berjalan vs Target Kinerja (analisis_kesesuaian_anggaran): Objek { "status": "Sesuai" | "Perlu Perhatian" | "Tidak Sesuai", "penjelasan": "...", "estimasi_biaya_per_output": "...", "proyeksi_pencapaian_target": "Target Kemungkinan Tercapai" | "Berisiko Tidak Tercapai" | "Diproyeksikan Tidak Tercapai", "alasan_proyeksi_target": "..." }.
 8. Ekstraksi tambahan: "lokasi" dan "sumber_dana".
 9. Evaluasi 6 Aspek Efisiensi & Efektivitas RKA (evaluasi_rka): efisiensi_alokasi, distribusi_rpd, kepatuhan_ssh_sbm, efisiensi_realisasi_kinerja, efektivitas_aktual, potensi_inefektivitas.
@@ -1164,8 +1162,8 @@ PENTING: Output Anda HARUS murni berupa valid JSON SAJA tanpa markdown \`\`\`jso
  { "level": "Tujuan (Ultimate)", "tolok_ukur": "Indeks Kualitas Kebijakan", "target": "85 Persen" },
  { "level": "Sasaran (Intermediate)", "tolok_ukur": "Persentase Capaian Sasaran", "target": "96 Persen" },
  { "level": "Program (Immediate)", "tolok_ukur": "Persentase Ketercapaian Program", "target": "96 Persen" },
- { "level": "Kegiatan (Immediate)", "tolok_ukur": "Jumlah Laporan Kegiatan", "target": "2 Jenis", "rincian": [ { "nama": "Jenis 1 — <nama dari dokumen>", "isi": "<uraian dari dokumen>" }, { "nama": "Jenis 2 — <nama dari dokumen>", "isi": "<uraian dari dokumen>" } ] },
- { "level": "Sub Kegiatan (Output)", "tolok_ukur": "Jumlah Dokumen Output", "target": "2 Laporan", "rincian": [ { "nama": "Laporan 1 — <nama laporan dari dokumen>", "isi": "<komponen/uraian dari dokumen>" }, { "nama": "Laporan 2 — <nama laporan dari dokumen>", "isi": "<komponen/uraian dari dokumen>" } ] },
+ { "level": "Kegiatan (Immediate)", "tolok_ukur": "Jumlah Laporan Kegiatan", "target": "2 Jenis" },
+ { "level": "Sub Kegiatan (Output)", "tolok_ukur": "Jumlah Dokumen Output", "target": "2 Laporan" },
  { "level": "Kelompok Sasaran", "tolok_ukur": "-", "target": "Kelompok sasaran program" }
  ],
  "analisis_kesesuaian_anggaran": {
@@ -1220,9 +1218,17 @@ app.post('/api/v1/evaluate', requireAuth, async (req, res) => {
  const prompt = await buildEvaluationPrompt({ text, rules, tahun });
  try {
  console.log("Sending prompt to Gemini...");
+ // Evaluasi utama & ekstraksi daftar Kegiatan/Sub Kegiatan dijalankan paralel.
+ const extractionPromise = Promise.race([
+ extractKegiatanRows(genAIInstance, geminiApiKey, text),
+ new Promise(resolve => setTimeout(() => resolve(null), 240000))
+ ]).catch(e => { console.warn('[Evaluate] Ekstraksi daftar Kegiatan gagal:', e.message); return null; });
+
  const result = await generateContentWithFallback(genAIInstance, geminiApiKey, prompt, { maxOutputTokens: 65536 });
  const response = await result.response;
- const jsonOutput = normalizeIndikatorRincian(parseAiJson(response.text()));
+ const jsonOutput = parseAiJson(response.text());
+ mergeKegiatanRows(jsonOutput, await extractionPromise);
+ normalizeIndikatorRincian(jsonOutput);
  res.json(jsonOutput);
  } catch (aiCallError) {
  console.warn("[Evaluate] Gemini AI error, beralih ke Fallback Heuristic Evaluator:", aiCallError.message);
@@ -1249,6 +1255,73 @@ app.post('/api/v1/evaluate', requireAuth, async (req, res) => {
 });
 
 
+
+// ── Ekstraksi KHUSUS daftar Kegiatan & Sub Kegiatan (hingga 100 + 100 baris) ──
+// Dipisah dari evaluasi utama supaya jawaban evaluasi tidak membengkak/terpotong
+// dan setiap Kegiatan/Sub Kegiatan mendapat barisnya sendiri.
+const MAX_KEGIATAN_ROWS = 100;
+
+function buildKegiatanExtractionPrompt(text) {
+  return `Anda adalah mesin ekstraksi data dokumen RKA/RENJA daerah. Tugas TUNGGAL: daftar SEMUA "Kegiatan" dan SEMUA "Sub Kegiatan" yang tertulis pada dokumen.
+
+<TEKS_RKA>
+${text.substring(0, RKA_PROMPT_TEXT_MAX)}
+</TEKS_RKA>
+
+ATURAN WAJIB:
+1. Dokumen dapat memuat hingga ${MAX_KEGIATAN_ROWS} Kegiatan dan hingga ${MAX_KEGIATAN_ROWS} Sub Kegiatan. Telusuri teks dari awal sampai akhir. DILARANG berhenti di tengah, menggabungkan, meringkas, atau memilih sebagian. Jika lebih dari ${MAX_KEGIATAN_ROWS}, ambil ${MAX_KEGIATAN_ROWS} pertama untuk masing-masing level.
+2. Buat SATU baris untuk SETIAP Kegiatan (level "Kegiatan (Immediate)") dan SATU baris untuk SETIAP Sub Kegiatan (level "Sub Kegiatan (Output)"), berurutan sesuai dokumen: semua Kegiatan dahulu, lalu semua Sub Kegiatan.
+3. Field: "level", "kode" (kode kegiatan/sub kegiatan bila ada, jika tidak "-"), "nama" (nama persis di dokumen), "tolok_ukur" (indikator/tolok ukur dari dokumen), "target" (angka + satuan persis dokumen, mis. "44 Organisasi").
+4. "rincian": [ { "nama": "...", "isi": "..." } ] berisi satuan-satuan yang dihitung pada target (satu item = satu organisasi / kegiatan / laporan yang disebut), diambil HANYA dari dokumen (uraian, spesifikasi, nama rekening & komponen belanja terkait). "isi" singkat (maks 150 karakter). Tulis hanya yang benar-benar tertulis; JANGAN mengarang nama atau angka dan JANGAN membuat item pengisi — jika dokumen tidak merinci, "rincian": [].
+5. Kegiatan dan Sub Kegiatan tidak boleh tertukar atau dicampur isinya.
+6. Output HARUS JSON valid murni tanpa markdown dan tanpa teks lain:
+{ "rows": [ { "level": "Kegiatan (Immediate)", "kode": "2.02.04", "nama": "...", "tolok_ukur": "...", "target": "44 Organisasi", "rincian": [ { "nama": "...", "isi": "..." } ] } ] }`;
+}
+
+async function extractKegiatanRows(genAIInstance, geminiApiKey, rawText) {
+  const text = cleanRkaText(rawText);
+  const prompt = buildKegiatanExtractionPrompt(text);
+  const result = await generateContentWithFallback(genAIInstance, geminiApiKey, prompt, {
+    maxOutputTokens: 65536,
+    timeoutMs: 200000
+  });
+  const response = await result.response;
+  const rows = parseAiJsonArraySalvage(response.text(), 'rows');
+  const clean = [];
+  const count = { keg: 0, sub: 0 };
+  for (const r of rows) {
+    if (!r || typeof r !== 'object') continue;
+    const lvl = String(r.level || '').trim();
+    const isSub = /^sub\s+kegiatan/i.test(lvl);
+    const isKeg = !isSub && /^kegiatan/i.test(lvl);
+    if (!isSub && !isKeg) continue;
+    const bucket = isSub ? 'sub' : 'keg';
+    if (count[bucket] >= MAX_KEGIATAN_ROWS) continue;
+    count[bucket]++;
+    clean.push({
+      level: isSub ? 'Sub Kegiatan (Output)' : 'Kegiatan (Immediate)',
+      kode: r.kode ? String(r.kode) : undefined,
+      nama: r.nama ? String(r.nama) : undefined,
+      tolok_ukur: String(r.tolok_ukur ?? '-'),
+      target: String(r.target ?? '-'),
+      rincian: Array.isArray(r.rincian) ? r.rincian : []
+    });
+  }
+  console.log(`[Evaluate] Ekstraksi daftar: ${count.keg} Kegiatan, ${count.sub} Sub Kegiatan.`);
+  return clean;
+}
+
+// Gabungkan hasil ekstraksi daftar ke indikator_kinerja hasil evaluasi utama.
+function mergeKegiatanRows(result, rows) {
+  if (!result || !Array.isArray(rows) || rows.length === 0) return result;
+  const isKegLevel = (r) => /^(sub\s+)?kegiatan/i.test(String(r?.level || '').trim());
+  const base = Array.isArray(result.indikator_kinerja) ? result.indikator_kinerja.filter(r => !isKegLevel(r)) : [];
+  const kelompokIdx = base.findIndex(r => /kelompok\s+sasaran/i.test(String(r?.level || '')));
+  if (kelompokIdx === -1) result.indikator_kinerja = [...base, ...rows];
+  else result.indikator_kinerja = [...base.slice(0, kelompokIdx), ...rows, ...base.slice(kelompokIdx)];
+  return result;
+}
+
 // Pastikan jumlah "rincian" Kegiatan/Sub Kegiatan sama dengan angka target
 // (mis. target "44 Organisasi" -> 44 item). Item yang tidak dirinci dokumen
 // dilengkapi placeholder jujur, tidak mengarang nama.
@@ -1259,7 +1332,7 @@ function normalizeIndikatorRincian(result) {
       if (!row || !/^(sub\s+)?kegiatan/i.test(String(row.level || '').trim())) continue;
       const m = String(row.target ?? '').replace(/\./g, '').match(/\d+/);
       const n = m ? parseInt(m[0], 10) : 0;
-      if (!n || n > 500) continue;
+      if (!n || n > 100) continue;
       const satuan = String(row.target).replace(/[\d.,\s]+/, '').trim() || 'Item';
       const list = Array.isArray(row.rincian) ? row.rincian.filter(it => it && (it.nama || it.isi)) : [];
       if (list.length < n) {

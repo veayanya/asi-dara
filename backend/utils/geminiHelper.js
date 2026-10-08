@@ -84,7 +84,8 @@ const CANDIDATE_MODELS = [
  */
 // Dokumen panjang (banyak Kegiatan/Sub Kegiatan) butuh waktu lebih lama untuk dibaca & dijawab.
 // Dasar 30 dtk, ditambah 1 dtk tiap 2.000 karakter prompt, maksimal 100 dtk per percobaan.
-function timeoutForPrompt(prompt) {
+function timeoutForPrompt(prompt, options = {}) {
+ if (options.timeoutMs) return options.timeoutMs;
  const len = String(prompt || '').length;
  return Math.min(100000, 30000 + Math.ceil(len / 2000) * 1000);
 }
@@ -113,7 +114,7 @@ async function tryKeyWithModels(apiKey, prompt, options = {}) {
  new Promise((_, rej) =>
  setTimeout(
  () => rej(new Error(`Timeout model ${modelName}`)),
- timeoutForPrompt(prompt)
+ timeoutForPrompt(prompt, options)
  )
  )
  ]);
@@ -272,4 +273,50 @@ export function parseAiJson(rawText) {
  );
  }
  }
+}
+
+/**
+ * Parse a JSON object of the form { "<key>": [ {...}, {...} ] } and, when the
+ * response was cut off mid-way (output token limit / timeout), salvage every
+ * COMPLETE object inside the array instead of throwing everything away.
+ *
+ * @param {string} rawText
+ * @param {string} key  name of the array property, e.g. "rows"
+ * @returns {any[]} array of complete objects (possibly empty)
+ */
+export function parseAiJsonArraySalvage(rawText, key) {
+  try {
+    const obj = parseAiJson(rawText);
+    if (Array.isArray(obj)) return obj;
+    if (obj && Array.isArray(obj[key])) return obj[key];
+  } catch (_) { /* lanjut ke penyelamatan manual */ }
+
+  if (!rawText || typeof rawText !== 'string') return [];
+  const keyIdx = rawText.indexOf(`"${key}"`);
+  const start = rawText.indexOf('[', keyIdx === -1 ? 0 : keyIdx);
+  if (start === -1) return [];
+
+  const out = [];
+  let depth = 0, inStr = false, esc = false, objStart = -1;
+  for (let i = start + 1; i < rawText.length; i++) {
+    const c = rawText[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') { inStr = true; continue; }
+    if (c === '{') { if (depth === 0) objStart = i; depth++; }
+    else if (c === '}') {
+      depth--;
+      if (depth === 0 && objStart !== -1) {
+        try {
+          out.push(JSON.parse(rawText.slice(objStart, i + 1).replace(/,\s*([}\]])/g, '$1')));
+        } catch (_) { /* lewati objek rusak */ }
+        objStart = -1;
+      }
+    } else if (c === ']' && depth === 0) break;
+  }
+  return out;
 }
