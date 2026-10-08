@@ -1,0 +1,2 @@
+/* Hanya lapisan utilitas Tailwind (tanpa base/preflight). Lihat tailwind.config.js. */
+@tailwind utilities;
