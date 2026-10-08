@@ -1,5 +1,5 @@
 <!--
-  CbbChatbot.vue — menu "AI Agen Chatbot RKA" (modul Chatbot Bapperida / cbb).
+  CbbChatbot.vue — menu "Simulasi Percakapan Agen AI" (modul Chatbot Bapperida / cbb).
   Menggantikan AiAgenChatbotRka.vue. Tanpa props; percakapan dijalankan oleh
   services/chatEngine.js (knowledge base lokal + Gemini bila API key tersedia).
   API key dibaca dari localStorage 'bapperida_api_key' atau VITE_GEMINI_API_KEY.

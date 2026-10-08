@@ -150,10 +150,10 @@ const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'nu
 
 const pageMeta = {
  'main-dashboard': { title: 'Dasbor Utama', section: 'Dasbor Utama' },
- 'admin-dashboard': { title: 'Admin Dashboard', section: 'Admin Dashboard' },
+ 'admin-dashboard': { title: 'Dasbor Admin', section: 'Dasbor Admin' },
  dashboard: { title: 'Unggah Berkas RKA', section: 'Unggah Berkas RKA' },
  analyzer: { title: 'Hasil Analisis', section: 'Hasil Analisis' },
- 'agentic-ai': { title: 'AI Agen Chatbot RKA', section: 'AI Agen Chatbot RKA' },
+ 'agentic-ai': { title: 'Simulasi Percakapan Agen AI', section: 'Simulasi Percakapan Agen AI' },
  ssh: { title: 'Pengaturan SSH', section: 'Pengaturan SSH' },
  history: { title: 'Arsip Dokumen RKA', section: 'Arsip Dokumen RKA' },
  config: { title: 'Pengaturan', section: 'Pengaturan' },

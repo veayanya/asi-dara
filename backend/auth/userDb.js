@@ -102,7 +102,7 @@ export async function readUsersDb() {
  console.log('[Auth] Database user diinisialisasi dengan akun: admin, bapperida, jaka, eva, arya, aulia, hakim');
  } else {
  // Catatan: akun moderator default TIDAK di-auto-create lagi.
- // Jika admin ingin akun moderator, buat manual lewat Admin Dashboard.
+ // Jika admin ingin akun moderator, buat manual lewat Dasbor Admin.
  }
  return db;
 }

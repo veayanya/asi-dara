@@ -37,7 +37,7 @@
           <i data-lucide="message-square"></i>
         </div>
         <div class="stat-content">
-          <div class="stat-label">AI Agen Chatbot RKA</div>
+          <div class="stat-label">Simulasi Percakapan Agen AI</div>
           <div class="stat-value" style="color: #3C9C6D; display: flex; align-items: center; gap: 8px;">
             <div class="status-dot" style="background-color: #3C9C6D;"></div> Tersedia
           </div>

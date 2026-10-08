@@ -23,7 +23,7 @@
  @click.prevent="selectTab('admin-dashboard')"
  >
  <i :data-lucide="props.currentUser?.role === 'admin' ? 'shield' : 'activity'"></i>
- <span>{{ props.currentUser?.role === 'admin' ? 'Admin Dashboard' : 'Audit & Backup' }}</span>
+ <span>{{ props.currentUser?.role === 'admin' ? 'Dasbor Admin' : 'Audit & Backup' }}</span>
  </a>
 
  <a href="#"
@@ -51,7 +51,7 @@
  :class="['nav-item nav-item-agent', { active: currentTab === 'agentic-ai' }]"
  @click.prevent="selectTab('agentic-ai')">
  <i data-lucide="bot"></i>
- <span style="flex: 1;">AI Agen Chatbot RKA</span>
+ <span style="flex: 1;">Simulasi Percakapan Agen AI</span>
  <span v-if="!isMenuEnabled('agentic-ai')" class="menu-off-badge">Nonaktif</span>
  <span v-else class="agent-badge-pulse">AI</span>
  </a>
@@ -85,7 +85,7 @@
  <!-- Status AI -->
       <div
         class="api-status-pill"
-        :title="apiStatus.geminiKeySet ? 'Gemini 2.5 Flash terhubung' : (props.currentUser?.role === 'admin' ? 'Atur di Admin Dashboard → Konfigurasi API' : 'AI belum dikonfigurasi')"
+        :title="apiStatus.geminiKeySet ? 'Gemini 2.5 Flash terhubung' : (props.currentUser?.role === 'admin' ? 'Atur di Dasbor Admin → Konfigurasi API' : 'AI belum dikonfigurasi')"
       >
         <span :class="['api-status-dot-mini', apiStatus.geminiKeySet ? 'dot-on' : 'dot-off']"></span>
         <span class="api-dot-label">{{ apiStatus.geminiKeySet ? 'AI siap' : 'AI belum aktif' }}</span>

@@ -1,5 +1,5 @@
 // routes/aibotRouter.js
-// Menu "AI Agen Chatbot RKA" (AIbot) — di-mount di /api/v1/aibot
+// Menu "Simulasi Percakapan Agen AI" (AIbot) — di-mount di /api/v1/aibot
 //
 //   GET  /health   — status layanan + model yang dipakai
 //   POST /analyze  — Mode 1: Analis Evaluasi RKA          { rkaText, customInstruction }
@@ -167,7 +167,7 @@ router.post('/analyze', async (req, res) => {
     await logActivity({
       req,
       action: 'AIBOT_ANALYZE',
-      target: 'AI Agen Chatbot RKA',
+      target: 'Simulasi Percakapan Agen AI',
       details: `Evaluasi RKA via AIbot (${rkaText.length} karakter, model ${result.model})`
     });
 
@@ -190,7 +190,7 @@ router.post('/revise', async (req, res) => {
     await logActivity({
       req,
       action: 'AIBOT_REVISE',
-      target: 'AI Agen Chatbot RKA',
+      target: 'Simulasi Percakapan Agen AI',
       details: `Revisi RKA via AIbot (${rkaText.length} karakter, model ${result.model})`
     });
 

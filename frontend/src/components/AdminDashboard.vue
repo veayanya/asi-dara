@@ -9,7 +9,7 @@
  </div>
  <div>
  <div class="admin-brand-title">
- Admin Dashboard
+ Dasbor Admin
  </div>
  <div class="admin-brand-sub">
  Manajemen User, Log Audit, Status API, & Konfigurasi Sistem
@@ -58,15 +58,6 @@
  <div class="stat-info">
  <div class="stat-label">Dokumen RKA</div>
  <div class="stat-value">{{ stats.rka?.total || 0 }}</div>
- <div class="stat-desc">{{ stats.rka?.approved || 0 }} disetujui</div>
- </div>
- </div>
- <div class="stat-card stat-purple">
- <div class="stat-icon-wrap"><i data-lucide="database"></i></div>
- <div class="stat-info">
- <div class="stat-label">Database SSH</div>
- <div class="stat-value">{{ stats.ssh?.count || 0 }}</div>
- <div class="stat-desc">Standar Satuan Harga</div>
  </div>
  </div>
  <div class="stat-card stat-amber">
@@ -1062,7 +1053,7 @@
  <span class="pchoice-icon"></span>
  <span class="pchoice-info">
  <strong>Google Gemini AI</strong>
- <small>Analisis RKA, Nilai Prakiraan Dampak, Ekstraksi e-SSH &amp; AI Agen Chatbot RKA</small>
+ <small>Analisis RKA, Nilai Prakiraan Dampak, Ekstraksi e-SSH &amp; Simulasi Percakapan Agen AI</small>
  </span>
  </label>
  </div>
@@ -1146,7 +1137,7 @@
  <div class="mform-group">
  <label>Provider Target</label>
  <select v-model="batchForm.provider" class="mform-input" disabled>
- <option value="gemini"> Google Gemini AI (Analisis RKA, SSH &amp; AI Agen Chatbot RKA)</option>
+ <option value="gemini"> Google Gemini AI (Analisis RKA, SSH &amp; Simulasi Percakapan Agen AI)</option>
  </select>
  </div>
 
@@ -1316,7 +1307,7 @@ const menuList = [
  { id: 'dashboard', label: 'Unggah Berkas RKA' },
  { id: 'main-dashboard', label: 'Dasbor Utama' },
  { id: 'analyzer', label: 'Hasil Analisis' },
- { id: 'agentic-ai', label: 'AI Agen Chatbot RKA' },
+ { id: 'agentic-ai', label: 'Simulasi Percakapan Agen AI' },
  { id: 'history', label: 'Arsip Dokumen RKA' },
  { id: 'petunjuk', label: 'Petunjuk Penggunaan' },
  { id: 'report', label: 'Laporan' },

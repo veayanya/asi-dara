@@ -290,7 +290,7 @@ const TABS = [
 // Banner sistem. Ganti teks/tautan sesuai kebutuhan, mis. pengumuman pemeliharaan:
 //   text: 'Sistem ASI DARA sedang dalam pemeliharaan rutin. Sebagian menu mungkin tidak dapat diakses.'
 const BANNER = {
-  text: 'Pastikan dokumen RKA berformat PDF sebelum diunggah ke menu Unggah Berkas RKA. AI Agen Chatbot RKA juga menerima DOCX, XLSX, CSV, dan TXT.',
+  text: 'Pastikan dokumen RKA berformat PDF sebelum diunggah ke menu Unggah Berkas RKA. Simulasi Percakapan Agen AI juga menerima DOCX, XLSX, CSV, dan TXT.',
   linkLabel: 'Lihat panduan unggah',
   article: 'unggah'
 };
@@ -312,11 +312,11 @@ const QUICK = [
 const ARTICLES = [
   {
     id: 'chatbot',
-    sidebar: 'Mempelajari tentang fitur AI Agen Chatbot RKA',
-    title: 'Mempelajari Fitur AI Agen Chatbot RKA',
+    sidebar: 'Mempelajari tentang fitur Simulasi Percakapan Agen AI',
+    title: 'Mempelajari Fitur Simulasi Percakapan Agen AI',
     keywords: 'chatbot ai agen bot tanya jawab revisi regulasi permendagri ssh sbm dpa pagu rasionalisasi mode konsultasi',
     intro: [
-      '**AI Agen Chatbot RKA** adalah asisten AI untuk perencanaan dan pengendalian anggaran daerah. Fitur ini punya tiga mode kerja yang dipilih lewat tab di bagian atas halamannya.',
+      '**Simulasi Percakapan Agen AI** adalah asisten AI untuk perencanaan dan pengendalian anggaran daerah. Fitur ini punya tiga mode kerja yang dipilih lewat tab di bagian atas halamannya.',
       'Anda dapat mengunggah dokumen RKA (PDF, DOCX, XLSX, CSV, atau TXT). Tombol **Contoh RKA** tersedia untuk mencoba tanpa berkas sendiri.'
     ],
     note: { text: 'AI hanya membantu menganalisis dan mengusulkan. Periksa kembali hasilnya dengan dokumen asli sebelum dipakai sebagai dasar keputusan anggaran.' },
@@ -324,7 +324,7 @@ const ARTICLES = [
       {
         title: 'Mode 1: Analis Evaluasi RKA',
         body: ['Menguji kepatuhan terhadap SBM, efisiensi anggaran, dan Nilai Prakiraan Dampak TAPD.'],
-        steps: ['Buka menu **AI Agen Chatbot RKA**, lalu pilih tab **Mode 1: Analis Evaluasi RKA**.', 'Unggah dokumen RKA pada area unggah.', 'Jalankan analisis dan baca temuan yang ditampilkan.']
+        steps: ['Buka menu **Simulasi Percakapan Agen AI**, lalu pilih tab **Mode 1: Analis Evaluasi RKA**.', 'Unggah dokumen RKA pada area unggah.', 'Jalankan analisis dan baca temuan yang ditampilkan.']
       },
       {
         title: 'Mode 2: Eksekutor Revisi RKA',
@@ -344,7 +344,7 @@ const ARTICLES = [
         ]
       }
     ],
-    actions: [{ label: 'Buka AI Agen Chatbot RKA', tab: 'agentic-ai' }]
+    actions: [{ label: 'Buka Simulasi Percakapan Agen AI', tab: 'agentic-ai' }]
   },
   {
     id: 'unggah',

@@ -1,5 +1,5 @@
 // utils/aibotService.js
-// Layanan AI untuk menu "AI Agen Chatbot RKA" (AIbot).
+// Layanan AI untuk menu "Simulasi Percakapan Agen AI" (AIbot).
 //
 // Tiga fungsi utama:
 //   • analyzeRKA   — Mode 1: Analis Evaluasi & Audit RKA

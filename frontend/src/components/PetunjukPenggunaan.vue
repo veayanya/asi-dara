@@ -176,7 +176,7 @@
                           <p class="pt-hl m-0 rounded-md bg-brand px-2 py-1.5 font-semibold text-white">Unggah Berkas RKA</p>
                           <p class="m-0 px-2 py-1.5 text-ink-2">Beranda</p>
                           <p class="m-0 px-2 py-1.5 text-ink-2">Hasil Analisis</p>
-                          <p class="m-0 px-2 py-1.5 text-ink-2">AI Agen Chatbot RKA</p>
+                          <p class="m-0 px-2 py-1.5 text-ink-2">Simulasi Percakapan Agen AI</p>
                           <p class="m-0 px-2 py-1.5 text-ink-2">Arsip Dokumen RKA</p>
                         </div>
                         <div class="min-w-0 flex-1 p-3">
@@ -700,7 +700,7 @@ const RAW_PARTS = [
         title: 'Siapkan berkas RKA berformat PDF.',
         text: 'Menu **Unggah Berkas RKA** hanya menerima dokumen RKA/DPA SKPD Kabupaten Cirebon dalam bentuk PDF.',
         bullets: [
-          'Berkas Excel (XLSX), Word (DOCX), dan foto ditolak di menu ini. Untuk berkas XLSX, pakai **AI Agen Chatbot RKA** seperti di Bagian 2.',
+          'Berkas Excel (XLSX), Word (DOCX), dan foto ditolak di menu ini. Untuk berkas XLSX, pakai **Simulasi Percakapan Agen AI** seperti di Bagian 2.',
           'Gunakan PDF asli yang teksnya bisa diseleksi, bukan foto atau hasil pindai.',
           'Ukuran maksimal **100 MB** per berkas. Berkas kosong (0 byte) juga ditolak.',
           'Beri nama berkas yang mudah dikenali, misalnya memuat nama OPD dan sub kegiatan, agar mudah dicari di arsip.'
@@ -764,16 +764,16 @@ const RAW_PARTS = [
   },
   {
     id: 'bagian-2',
-    title: 'Menggunakan AI Agen Chatbot RKA',
-    lead: 'Asisten AI untuk mengevaluasi RKA, merevisi anggaran, dan menanyakan aturan. Buka lewat menu AI Agen Chatbot RKA.',
-    cta: { label: 'Buka AI Agen Chatbot RKA', tab: 'agentic-ai' },
+    title: 'Menggunakan Simulasi Percakapan Agen AI',
+    lead: 'Asisten AI untuk mengevaluasi RKA, merevisi anggaran, dan menanyakan aturan. Buka lewat menu Simulasi Percakapan Agen AI.',
+    cta: { label: 'Buka Simulasi Percakapan Agen AI', tab: 'agentic-ai' },
     next: 'bagian-3',
     // Sumber: AiAgenChatbotRka.vue, b-baru-main/routes/aibotRouter.js (unggah maks. 20 MB, 1 berkas)
     steps: [
       {
         id: 'b2-langkah-1',
         short: 'Pilih mode kerja',
-        title: 'Buka AI Agen Chatbot RKA dan pilih mode kerja.',
+        title: 'Buka Simulasi Percakapan Agen AI dan pilih mode kerja.',
         text: 'Pilih salah satu dari tiga tab di bagian atas halaman sesuai kebutuhan Anda.',
         bullets: [
           '**Mode 1, Analis Evaluasi RKA:** menguji kepatuhan SBM, efisiensi anggaran, dan Nilai Prakiraan Dampak.',
@@ -975,7 +975,7 @@ const BELANJA_MOCK = [
 ];
 const FORMAT_CARDS = [
   { menu: 'Unggah Berkas RKA', format: 'Format: PDF', batas: 'Maksimal 100 MB per berkas, boleh banyak berkas sekaligus' },
-  { menu: 'AI Agen Chatbot RKA (Mode 1 dan 2)', format: 'Format: PDF, DOCX, XLSX, XLS, CSV, TXT, JSON', batas: 'Maksimal 20 MB, satu berkas' },
+  { menu: 'Simulasi Percakapan Agen AI (Mode 1 dan 2)', format: 'Format: PDF, DOCX, XLSX, XLS, CSV, TXT, JSON', batas: 'Maksimal 20 MB, satu berkas' },
   { menu: 'Unggah Ulang PDF', format: 'Format: PDF', batas: 'Maksimal 25 MB' }
 ];
 const CATATAN = [

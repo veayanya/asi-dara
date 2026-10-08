@@ -1,5 +1,5 @@
 <template>
-  <PageHero icon="bot" title="AI Agen Chatbot RKA" subtitle="Tanya jawab seputar RKA" style="margin-bottom: 1.25rem;">
+  <PageHero icon="bot" title="Simulasi Percakapan Agen AI" subtitle="Tanya jawab seputar RKA" style="margin-bottom: 1.25rem;">
       <button
         id="btn-diagnosis-open"
         @click="$emit('open-diagnosis')"

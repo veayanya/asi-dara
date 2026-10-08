@@ -1792,7 +1792,7 @@ app.use('/api/v1/settings', settingsRouter);
 // Mount Laporan routes (kirim laporan user via email + attachment gambar otomatis)
 app.use('/api/v1/laporan', laporanRouter);
 
-// Mount AI Agen Chatbot RKA (AIbot): analisis RKA, revisi RKA, konsultasi
+// Mount Simulasi Percakapan Agen AI (AIbot): analisis RKA, revisi RKA, konsultasi
 // regulasi, dan ekstraksi teks dokumen (PDF/DOCX/XLSX/CSV/TXT/JSON).
 app.use('/api/v1/aibot', aibotRouter);
 

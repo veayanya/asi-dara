@@ -1,5 +1,5 @@
 <!--
-  AiAgenChatbotRka.vue — menu "AI Agen Chatbot RKA" (AIbot, Vue 3 <script setup>)
+  AiAgenChatbotRka.vue — menu "Simulasi Percakapan Agen AI" (AIbot, Vue 3 <script setup>)
 
   Dependensi frontend:
     • npm i marked            (render Markdown)
@@ -17,7 +17,7 @@
     <!-- PAGE HEADER (pola sama dengan halaman lain: kicker + judul + deskripsi) -->
     <header class="aibot-head">
       <div class="aibot-head-text">
-        <span class="page-kicker">AI Agen Chatbot RKA</span>
+        <span class="page-kicker">Simulasi Percakapan Agen AI</span>
         <h2 class="page-title-lg brand-title">
           BAPPERIDA <span class="badge-ai">AI-RKA</span>
         </h2>
