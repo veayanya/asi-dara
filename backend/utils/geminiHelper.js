@@ -89,7 +89,7 @@ function timeoutForPrompt(prompt) {
  return Math.min(100000, 30000 + Math.ceil(len / 2000) * 1000);
 }
 
-async function tryKeyWithModels(apiKey, prompt) {
+async function tryKeyWithModels(apiKey, prompt, options = {}) {
  const genAI = new GoogleGenerativeAI(apiKey);
  let lastErr = null;
 
@@ -101,10 +101,11 @@ async function tryKeyWithModels(apiKey, prompt) {
  ...(useJsonMime
  ? {
  generationConfig: {
- responseMimeType: 'application/json'
+ responseMimeType: 'application/json',
+ ...(options.maxOutputTokens ? { maxOutputTokens: options.maxOutputTokens } : {})
  }
  }
- : {})
+ : (options.maxOutputTokens ? { generationConfig: { maxOutputTokens: options.maxOutputTokens } } : {}))
  });
 
  const result = await Promise.race([
@@ -161,7 +162,8 @@ async function tryKeyWithModels(apiKey, prompt) {
 export async function generateContentWithFallback(
  _unused,
  clientApiKey,
- prompt
+ prompt,
+ options = {}
 ) {
  const pool = buildKeyPool();
 
@@ -182,7 +184,7 @@ export async function generateContentWithFallback(
  const key = effectivePool[i];
 
  try {
- return await tryKeyWithModels(key, prompt);
+ return await tryKeyWithModels(key, prompt, options);
  } catch (err) {
  lastError = err;
 

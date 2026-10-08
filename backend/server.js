@@ -1100,6 +1100,7 @@ Instruksi Ekstraksi & Penalaran Tambahan:
 6. Ekstraksi Indikator & Tolok Ukur Kinerja (indikator_kinerja): Ekstrak baris Tujuan (Ultimate), Sasaran (Intermediate), Program (Immediate), Kegiatan (Immediate), Sub Kegiatan (Output), Kelompok Sasaran. { "level": "...", "tolok_ukur": "...", "target": "..." }.
    BACA SEMUA KEGIATAN & SUB KEGIATAN (WAJIB): dokumen dapat memuat hingga 100 Kegiatan dan hingga 100 Sub Kegiatan. Telusuri SELURUH teks dari awal sampai akhir dan buat SATU baris indikator_kinerja untuk SETIAP Kegiatan (Immediate) dan SETIAP Sub Kegiatan (Output) yang tertulis, sesuai urutan di dokumen. DILARANG menggabungkan, meringkas, memilih sebagian, atau berhenti di tengah; bila ada lebih dari 100, ambil 100 pertama untuk masing-masing level.
    RINCIAN ISI (WAJIB untuk baris "Kegiatan (Immediate)" DAN "Sub Kegiatan (Output)"): tambahkan properti "rincian": [ { "nama": "...", "isi": "..." } ] yang memuat SEMUA rincian yang tertulis di dokumen untuk kegiatan/sub kegiatan tersebut — jangan dipotong, dibatasi jumlahnya, atau diringkas. Contoh: bila target "2 Laporan", buat item untuk tiap laporan/dokumen yang disebut (mis. jenis rapat/konsultasi, periode, pihak terkait) dan "isi" berupa komponen/uraian yang membentuknya; bila dokumen menyebut lebih banyak rincian daripada angka target, tetap tulis semuanya. Ambil HANYA dari teks dokumen (uraian Kegiatan/Sub Kegiatan, keterangan/spesifikasi pada rincian belanja, nama rekening & komponen belanja yang terkait). DILARANG mengarang nama, tanggal, atau angka yang tidak ada di dokumen; bila dokumen tidak merinci, isi "isi" dengan "Tidak dirinci pada dokumen". Baris level lain (Tujuan, Sasaran, Program, Kelompok Sasaran) tidak perlu "rincian".
+   JUMLAH RINCIAN HARUS SAMA DENGAN ANGKA TARGET (WAJIB): bila target berupa angka (mis. "44 Organisasi", "4 Organisasi", "110 Orang"), jumlah item "rincian" HARUS persis sebanyak angka itu. Satu item = satu satuan yang dihitung pada target (satu organisasi, satu kegiatan, satu laporan), BUKAN satu baris belanja. Contoh: target "44 Organisasi" -> 44 item (Organisasi 1 ... Organisasi 44); target "4 Organisasi" -> 4 item. Gunakan nama asli yang tertulis di dokumen; bila dokumen hanya menyebut sebagian, tulis yang disebut lalu lengkapi sisanya dengan nama "<satuan> ke-N" dan isi "Tidak dirinci pada dokumen" sampai jumlahnya sama dengan target. Jangan mencampur isi "Kegiatan" dengan isi "Sub Kegiatan": rincian Kegiatan hanya untuk satuan target Kegiatan, rincian Sub Kegiatan hanya untuk satuan target Sub Kegiatan.
 7. Analisis Kesesuaian Anggaran Tahun Berjalan vs Target Kinerja (analisis_kesesuaian_anggaran): Objek { "status": "Sesuai" | "Perlu Perhatian" | "Tidak Sesuai", "penjelasan": "...", "estimasi_biaya_per_output": "...", "proyeksi_pencapaian_target": "Target Kemungkinan Tercapai" | "Berisiko Tidak Tercapai" | "Diproyeksikan Tidak Tercapai", "alasan_proyeksi_target": "..." }.
 8. Ekstraksi tambahan: "lokasi" dan "sumber_dana".
 9. Evaluasi 6 Aspek Efisiensi & Efektivitas RKA (evaluasi_rka): efisiensi_alokasi, distribusi_rpd, kepatuhan_ssh_sbm, efisiensi_realisasi_kinerja, efektivitas_aktual, potensi_inefektivitas.
@@ -1219,9 +1220,9 @@ app.post('/api/v1/evaluate', requireAuth, async (req, res) => {
  const prompt = await buildEvaluationPrompt({ text, rules, tahun });
  try {
  console.log("Sending prompt to Gemini...");
- const result = await generateContentWithFallback(genAIInstance, geminiApiKey, prompt);
+ const result = await generateContentWithFallback(genAIInstance, geminiApiKey, prompt, { maxOutputTokens: 65536 });
  const response = await result.response;
- const jsonOutput = parseAiJson(response.text());
+ const jsonOutput = normalizeIndikatorRincian(parseAiJson(response.text()));
  res.json(jsonOutput);
  } catch (aiCallError) {
  console.warn("[Evaluate] Gemini AI error, beralih ke Fallback Heuristic Evaluator:", aiCallError.message);
@@ -1246,6 +1247,34 @@ app.post('/api/v1/evaluate', requireAuth, async (req, res) => {
  }
  }
 });
+
+
+// Pastikan jumlah "rincian" Kegiatan/Sub Kegiatan sama dengan angka target
+// (mis. target "44 Organisasi" -> 44 item). Item yang tidak dirinci dokumen
+// dilengkapi placeholder jujur, tidak mengarang nama.
+function normalizeIndikatorRincian(result) {
+  try {
+    if (!result || !Array.isArray(result.indikator_kinerja)) return result;
+    for (const row of result.indikator_kinerja) {
+      if (!row || !/^(sub\s+)?kegiatan/i.test(String(row.level || '').trim())) continue;
+      const m = String(row.target ?? '').replace(/\./g, '').match(/\d+/);
+      const n = m ? parseInt(m[0], 10) : 0;
+      if (!n || n > 500) continue;
+      const satuan = String(row.target).replace(/[\d.,\s]+/, '').trim() || 'Item';
+      const list = Array.isArray(row.rincian) ? row.rincian.filter(it => it && (it.nama || it.isi)) : [];
+      if (list.length < n) {
+        console.warn(`[Evaluate] Rincian ${row.level}: ${list.length} dari ${n} target; dilengkapi placeholder.`);
+        for (let i = list.length + 1; i <= n; i++) {
+          list.push({ nama: `${satuan} ke-${i}`, isi: 'Tidak dirinci pada dokumen' });
+        }
+      }
+      row.rincian = list;
+    }
+  } catch (e) {
+    console.warn('[Evaluate] normalizeIndikatorRincian gagal:', e.message);
+  }
+  return result;
+}
 
 // --- CRUD Endpoints for RKA Database ---
 
