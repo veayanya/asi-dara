@@ -122,6 +122,14 @@
   border-color: var(--primary-color);
 }
 
+.cbb-quick-btn:disabled,
+.cbb-quick-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
 /* ---- Badge ---- */
 .cbb-badge {
   display: inline-flex;

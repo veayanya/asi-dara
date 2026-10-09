@@ -71,22 +71,25 @@
           <span style="color: var(--text-muted); font-weight: 600;">Tanya Alasan & Detail:</span>
           <button
             @click="askQuickQuestion('💡 Mengapa rasio Nilai Prakiraan Dampak dokumen arsip ini bernilai demikian? Jelaskan alasan dan kausalitas kelayakannya.')"
-            class="cbb-btn-secondary"
+            class="cbb-btn-secondary cbb-quick-btn"
             style="padding: 3px 9px; font-size: 0.725rem; border-radius: 20px;"
+            :disabled="isTyping"
           >
             💡 Mengapa Rasio {{ getDocRatioBadge(selectedDoc) }}?
           </button>
           <button
             @click="askQuickQuestion('⚖️ Jelaskan rincian 5 Faktor Penyesuaian (Deadweight, Attribution, Displacement, Drop-off, Unintended) pada dokumen ini.')"
-            class="cbb-btn-secondary"
+            class="cbb-btn-secondary cbb-quick-btn"
             style="padding: 3px 9px; font-size: 0.725rem; border-radius: 20px;"
+            :disabled="isTyping"
           >
             ⚖️ Rincian 5 Faktor Penyesuaian
           </button>
           <button
             @click="askQuickQuestion('📝 Berikan rekomendasi perbaikan dan langkah strategis AI untuk dokumen RKA arsip ini.')"
-            class="cbb-btn-secondary"
+            class="cbb-btn-secondary cbb-quick-btn"
             style="padding: 3px 9px; font-size: 0.725rem; border-radius: 20px;"
+            :disabled="isTyping"
           >
             📝 Rekomendasi Strategis AI
           </button>
