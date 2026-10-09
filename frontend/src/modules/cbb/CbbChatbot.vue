@@ -124,6 +124,8 @@ const isTyping = ref(false);
 const apiKey = ref(localStorage.getItem('bapperida_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '');
 
 const selectedRkaId = ref('');
+// Lacak ID terakhir yang sudah dinotifikasi agar pesan tidak duplikat
+const lastNotifiedDocId = ref('');
 
 const rkisList = computed(() => {
   return Array.isArray(rkis?.value) ? rkis.value : (Array.isArray(rkis) ? rkis : []);
@@ -231,16 +233,20 @@ async function handleSendMessage(query) {
   }, 400);
 }
 
-watch(selectedDoc, (newDoc) => {
-  if (newDoc) {
-    const title = newDoc.namaDokumen || newDoc.subKegiatan || newDoc.program || newDoc.id;
-    messages.value.push({
-      role: 'assistant',
-      time: formatTime(),
-      badge: 'Arsip Pilihan Terhubung',
-      text: `📌 Berkas arsip **"${title}"** (${newDoc.opd || 'OPD'}) berhasil dihubungkan ke sesi percakapan.\n\nKlik salah satu tombol pertanyaan cepat di atas atau ketikkan pertanyaan Anda tentang alasan Nilai Prakiraan Dampak / faktor penyesuaian dokumen ini!`
-    });
-  }
+// Watch pada selectedRkaId (primitif string) — hanya terpicu saat user
+// benar-benar mengganti pilihan dropdown, bukan saat computed dievaluasi ulang.
+watch(selectedRkaId, (newId) => {
+  if (!newId || newId === lastNotifiedDocId.value) return;
+  lastNotifiedDocId.value = newId;
+  const doc = rkisList.value.find(r => r.id === newId);
+  if (!doc) return;
+  const title = doc.namaDokumen || doc.subKegiatan || doc.program || doc.id;
+  messages.value.push({
+    role: 'assistant',
+    time: formatTime(),
+    badge: 'Arsip Pilihan Terhubung',
+    text: `📌 Berkas arsip **"${title}"** (${doc.opd || 'OPD'}) berhasil dihubungkan ke sesi percakapan.\n\nKlik salah satu tombol pertanyaan cepat di atas atau ketikkan pertanyaan Anda tentang alasan Nilai Prakiraan Dampak / faktor penyesuaian dokumen ini!`
+  });
 });
 
 onMounted(() => {
