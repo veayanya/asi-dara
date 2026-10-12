@@ -3038,6 +3038,87 @@ input:checked+.slider:before {
     flex-wrap: wrap;
 }
 
+/* ── Filter OPD & Tahun ────────────────────────────────────────── */
+.arsip-filter-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.arsip-filter-select-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.arsip-filter-select-chevron {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.arsip-filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 38px;
+    padding: 0 32px 0 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+    min-width: 130px;
+    max-width: 200px;
+}
+
+.arsip-filter-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(27, 77, 70, 0.12);
+}
+
+.arsip-filter-select option {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.arsip-filter-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.arsip-filter-reset-btn:hover {
+    background: #fde68a;
+    border-color: #f59e0b;
+}
+
 .arsip-count-badge {
     display: flex;
     align-items: center;
@@ -3051,6 +3132,7 @@ input:checked+.slider:before {
     border-radius: 8px;
     white-space: nowrap;
 }
+
 
 .arsip-table th {
     font-size: 0.72rem;

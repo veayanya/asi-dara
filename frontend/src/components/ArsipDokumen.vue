@@ -79,6 +79,36 @@
  </div>
  </div>
 
+ <!-- Filter & Sortir OPD / Tahun -->
+ <div class="arsip-filter-bar arsip-filter-bar-sub">
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="arsip-filter-opd">OPD</label>
+ <select id="arsip-filter-opd" class="form-input arsip-select" v-model="filterOpd">
+ <option value="">Semua OPD</option>
+ <option v-for="o in opdOptions" :key="o" :value="o">{{ o }}</option>
+ </select>
+ </div>
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="arsip-filter-tahun">Tahun</label>
+ <select id="arsip-filter-tahun" class="form-input arsip-select" v-model="filterTahun">
+ <option value="">Semua Tahun</option>
+ <option v-for="t in tahunOptions" :key="t" :value="t">{{ t }}</option>
+ </select>
+ </div>
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="arsip-sort">Urutkan</label>
+ <select id="arsip-sort" class="form-input arsip-select" v-model="sortBy">
+ <option value="terbaru">Tanggal unggah (terbaru)</option>
+ <option value="terlama">Tanggal unggah (terlama)</option>
+ <option value="opd-asc">OPD (A–Z)</option>
+ <option value="opd-desc">OPD (Z–A)</option>
+ <option value="tahun-desc">Tahun (terbaru)</option>
+ <option value="tahun-asc">Tahun (terlama)</option>
+ </select>
+ </div>
+ <button v-if="canReset" type="button" class="bulk-btn bulk-btn-clear" @click="resetFilters">Reset Filter</button>
+ </div>
+
  <!-- Table -->
  <div class="card-body" style="padding: 0;">
  <div class="data-table-container">
@@ -104,15 +134,15 @@
  <td colspan="9" class="arsip-empty-state">
  <div class="arsip-empty-content">
  <i data-lucide="folder-open" style="width: 52px; height: 52px; opacity: 0.25; margin-bottom: 16px;"></i>
- <p v-if="searchQuery">
- Tidak ada dokumen yang cocok dengan kata kunci pencarian.
+ <p v-if="searchQuery || hasActiveFilter">
+ Tidak ada dokumen yang cocok dengan pencarian atau filter yang dipilih.
  </p>
  <p v-else>
  Belum ada dokumen RKA yang tersimpan dalam arsip.<br>
  Mulai dengan mengunggah dokumen RKA pertama Anda.
  </p>
  <button
- v-if="!searchQuery"
+ v-if="!searchQuery && !hasActiveFilter"
  class="btn btn-primary btn-sm"
  style="margin-top: 16px;"
  @click="goToUpload"
@@ -319,6 +349,36 @@
   </div>
  </div>
 
+ <!-- Filter & Sortir OPD / Tahun -->
+ <div class="arsip-filter-bar arsip-filter-bar-sub">
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="trash-filter-opd">OPD</label>
+ <select id="trash-filter-opd" class="form-input arsip-select" v-model="filterOpd">
+ <option value="">Semua OPD</option>
+ <option v-for="o in opdOptions" :key="o" :value="o">{{ o }}</option>
+ </select>
+ </div>
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="trash-filter-tahun">Tahun</label>
+ <select id="trash-filter-tahun" class="form-input arsip-select" v-model="filterTahun">
+ <option value="">Semua Tahun</option>
+ <option v-for="t in tahunOptions" :key="t" :value="t">{{ t }}</option>
+ </select>
+ </div>
+ <div class="arsip-filter-field">
+ <label class="arsip-filter-label" for="trash-sort">Urutkan</label>
+ <select id="trash-sort" class="form-input arsip-select" v-model="sortBy">
+ <option value="terbaru">Dihapus (terbaru)</option>
+ <option value="terlama">Dihapus (terlama)</option>
+ <option value="opd-asc">OPD (A–Z)</option>
+ <option value="opd-desc">OPD (Z–A)</option>
+ <option value="tahun-desc">Tahun (terbaru)</option>
+ <option value="tahun-asc">Tahun (terlama)</option>
+ </select>
+ </div>
+ <button v-if="canReset" type="button" class="bulk-btn bulk-btn-clear" @click="resetFilters">Reset Filter</button>
+ </div>
+
  <div class="card-body" style="padding: 0;">
   <div class="data-table-container">
    <table class="data-table arsip-table">
@@ -350,7 +410,7 @@
       <td :colspan="trashColspan" class="arsip-empty-state">
        <div class="arsip-empty-content">
         <div style="opacity: 0.25; margin-bottom: 16px;"><svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
-        <p v-if="searchQuery">Tidak ada dokumen di Sampah yang cocok dengan kata kunci pencarian.</p>
+        <p v-if="searchQuery || hasActiveFilter">Tidak ada dokumen di Sampah yang cocok dengan pencarian atau filter yang dipilih.</p>
         <p v-else>
          Sampah kosong.<br>
          Dokumen yang dihapus dari arsip akan muncul di sini dan bisa dikembalikan selama {{ TRASH_RETENTION_DAYS }} hari.
@@ -910,6 +970,43 @@ const {
 // ── Search & Filter ──────────────────────────────────────────────────
 const searchQuery = ref('');
 const filterStatus = ref('all');
+const filterOpd = ref('');
+const filterTahun = ref('');
+const sortBy = ref('terbaru'); // terbaru | terlama | opd-asc | opd-desc | tahun-desc | tahun-asc
+
+// hasActiveFilter = ada penyaringan OPD/tahun (memengaruhi isi daftar); canReset = juga termasuk urutan non-default.
+const hasActiveFilter = computed(() => !!filterOpd.value || !!filterTahun.value);
+const canReset = computed(() => hasActiveFilter.value || sortBy.value !== 'terbaru');
+const resetFilters = () => { filterOpd.value = ''; filterTahun.value = ''; sortBy.value = 'terbaru'; };
+
+// Nilai OPD & tahun yang dipakai untuk filter/sortir = persis yang ditampilkan di tabel.
+const getOpdLabel = (item) => cleanOpdName(item?.opd || '');
+const getTahunLabel = (item, fallback = '') => String(item?.tahunRencana || item?.tahun || fallback);
+
+// Terapkan filter OPD/tahun lalu urutkan. `timeFn` = waktu acuan tab (unggah / dihapus),
+// dipakai sebagai urutan utama pada "terbaru/terlama" dan sebagai pembeda pada urutan lain.
+const applyFilterSort = (list, timeFn, tahunFallback) => {
+  const opd = filterOpd.value;
+  const tahun = filterTahun.value;
+  const out = list.filter(item =>
+    (!opd || getOpdLabel(item) === opd) &&
+    (!tahun || getTahunLabel(item, tahunFallback) === tahun)
+  );
+  const byTimeDesc = (a, b) => timeFn(b) - timeFn(a);
+  const byOpd = (a, b) => getOpdLabel(a).localeCompare(getOpdLabel(b), 'id', { sensitivity: 'base' });
+  const byTahun = (a, b) => (parseInt(getTahunLabel(a, tahunFallback), 10) || 0) - (parseInt(getTahunLabel(b, tahunFallback), 10) || 0);
+  switch (sortBy.value) {
+    case 'terlama':     return out.sort((a, b) => -byTimeDesc(a, b));
+    case 'opd-asc':     return out.sort((a, b) => byOpd(a, b) || byTimeDesc(a, b));
+    case 'opd-desc':    return out.sort((a, b) => -byOpd(a, b) || byTimeDesc(a, b));
+    case 'tahun-asc':   return out.sort((a, b) => byTahun(a, b) || byOpd(a, b) || byTimeDesc(a, b));
+    case 'tahun-desc':  return out.sort((a, b) => -byTahun(a, b) || byOpd(a, b) || byTimeDesc(a, b));
+    default:            return out.sort(byTimeDesc);
+  }
+};
+
+const uniqueOpd = (list) => [...new Set(list.map(getOpdLabel).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+const uniqueTahun = (list, fb) => [...new Set(list.map(i => getTahunLabel(i, fb)).filter(Boolean))].sort((a, b) => b.localeCompare(a, 'id', { numeric: true }));
 
 // Waktu unggah dalam milidetik. Mendukung ISO (2026-09-20T05:03:51Z) dan format
 // lokal lama "dd/mm/yyyy hh.mm(.ss)". Tanpa tanggal valid → 0 (tampil paling bawah).
@@ -931,15 +1028,15 @@ const getUploadTime = (item) => {
 // termasuk setelah dokumen ditambahkan/dipulihkan dari backup.
 const filteredRkis = computed(() => {
  const q = searchQuery.value.toLowerCase().trim();
- return rkis.value
- .filter(item => {
+ const base = rkis.value
+  .filter(item => {
  return !q ||
  (item.namaDokumen || '').toLowerCase().includes(q) ||
  (item.opd || '').toLowerCase().includes(q) ||
  (item.program || '').toLowerCase().includes(q) ||
  (item.id || '').toLowerCase().includes(q);
- })
- .sort((a, b) => getUploadTime(b) - getUploadTime(a));
+ });
+ return applyFilterSort(base, getUploadTime, '2026');
 });
 
 // ── Modal State ───────────────────────────────────────────────────────
@@ -1262,8 +1359,8 @@ const openBulkDelete = () => {
 const openDeleteAll = () => {
  openDeleteModal(
  filteredRkis.value,
- searchQuery.value.trim()
- ? 'Hanya dokumen yang cocok dengan pencarian saat ini.'
+ (searchQuery.value.trim() || hasActiveFilter.value)
+ ? 'Hanya dokumen yang cocok dengan pencarian/filter saat ini.'
  : 'Ini mencakup seluruh dokumen yang tampil di arsip.'
  );
 };
@@ -1317,6 +1414,7 @@ const loadTrash = async () => {
 const switchView = (view) => {
   if (activeView.value === view) return;
   activeView.value = view;
+  resetFilters();
   searchQuery.value = ''; // pencarian tidak dibawa ke tab lain agar cakupan "Semua" tidak terfilter diam-diam
   clearSelection();
   clearTrashSelection();
@@ -1331,15 +1429,25 @@ const getDeletedTime = (item) => {
 
 const filteredTrash = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
-  return trashItems.value
+  const base = trashItems.value
     .filter(item => {
       return !q ||
         (item.namaDokumen || '').toLowerCase().includes(q) ||
         (item.opd || '').toLowerCase().includes(q) ||
         (item.program || '').toLowerCase().includes(q) ||
         String(item.id || '').toLowerCase().includes(q);
-    })
-    .sort((a, b) => getDeletedTime(b) - getDeletedTime(a));
+    });
+  return applyFilterSort(base, getDeletedTime, '');
+});
+
+// Pilihan dropdown mengikuti tab yang sedang dibuka.
+const opdOptions = computed(() => uniqueOpd(activeView.value === 'sampah' ? trashItems.value : rkis.value));
+const tahunOptions = computed(() => activeView.value === 'sampah' ? uniqueTahun(trashItems.value, '') : uniqueTahun(rkis.value, '2026'));
+
+// Jika OPD/tahun terpilih sudah tidak ada (mis. dokumennya dihapus), lepas filternya agar daftar tidak kosong diam-diam.
+watch([opdOptions, tahunOptions], () => {
+  if (filterOpd.value && !opdOptions.value.includes(filterOpd.value)) filterOpd.value = '';
+  if (filterTahun.value && !tahunOptions.value.includes(filterTahun.value)) filterTahun.value = '';
 });
 
 const trashColspan = computed(() => (isPrivileged.value ? 9 : 8));
@@ -1411,8 +1519,8 @@ const trashRestoreTargets = computed(() => {
 
 const trashRestoreScopeNote = computed(() => {
   if (trashRestoreScope.value !== 'all') return '';
-  return searchQuery.value.trim()
-    ? 'Hanya dokumen yang cocok dengan pencarian saat ini.'
+  return (searchQuery.value.trim() || hasActiveFilter.value)
+    ? 'Hanya dokumen yang cocok dengan pencarian/filter saat ini.'
     : 'Ini mencakup seluruh dokumen di Sampah.';
 });
 
@@ -1717,7 +1825,15 @@ watch([showDeleteModal, showEditModal, showSaveConfirmModal, showReuploadModal, 
 </script>
 
 <style scoped>
-<style scoped>
+
+/* ── Filter & sortir OPD / Tahun ── */
+.arsip-filter-bar-sub { padding-top: 12px; padding-bottom: 12px; align-items: flex-end; }
+.arsip-filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 150px; flex: 1 1 170px; max-width: 320px; }
+.arsip-filter-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.arsip-select { width: 100%; cursor: pointer; text-overflow: ellipsis; }
+@media (max-width: 640px) {
+ .arsip-filter-field { max-width: none; flex-basis: 100%; }
+}
 /* ── Pilih & hapus massal ── */
 .arsip-bulk-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .bulk-count { font-size: 0.8rem; font-weight: 700; color: var(--primary-color); margin-right: 2px; }
