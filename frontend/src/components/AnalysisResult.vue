@@ -380,6 +380,40 @@
  </div>
  </div>
 
+ <!-- Verifikasi Kelaikan Anggaran (5 Prinsip) -->
+ <div v-if="vk" class="vk-card" :class="vkClass">
+ <div class="vk-top">
+ <span class="vk-title">Verifikasi Kelaikan Anggaran (5 Prinsip Efisiensi)</span>
+ <span class="vk-status-pill">{{ vk.status }}</span>
+ </div>
+ <div class="vk-summary">
+ <div class="vk-stat"><span class="vk-stat-label">Skor total</span><strong>{{ vk.skor_total }} / 100</strong></div>
+ <div class="vk-stat"><span class="vk-stat-label">Porsi biaya pendukung</span><strong>{{ vk.anggaran.porsi_pendukung_persen }}% <small>(maks. {{ vk.ambang.batas_pendukung }}%)</small></strong></div>
+ <div v-if="vk.anggaran.wajib_dipangkas > 0" class="vk-stat"><span class="vk-stat-label">Wajib dipangkas &amp; dialihkan</span><strong>{{ formatRupiah(vk.anggaran.wajib_dipangkas) }}</strong></div>
+ </div>
+ <ul class="vk-alasan"><li v-for="(a, i) in vk.alasan" :key="'vka'+i">{{ a }}</li></ul>
+ <details class="kesesuaian-detail">
+ <summary class="kesesuaian-detail-toggle">Lihat rincian skor, gerbang &amp; klarifikasi</summary>
+ <div class="kesesuaian-detail-body">
+ <table class="vk-table">
+ <thead><tr><th>Kriteria</th><th>Bobot</th><th>Skor</th><th>Poin</th><th>Temuan</th></tr></thead>
+ <tbody>
+ <tr v-for="k in vk.kriteria" :key="k.key">
+ <td>{{ k.nama }}</td><td>{{ k.bobot }}</td>
+ <td>{{ k.skor_persen }}%<span v-if="k.tidak_berlaku"> (tidak berlaku)</span><span v-else-if="k.data_tidak_tersedia"> (data kurang)</span></td>
+ <td>{{ k.poin }}</td><td>{{ k.temuan }}</td>
+ </tr>
+ </tbody>
+ </table>
+ <p class="vk-sub">Gerbang wajib</p>
+ <ul class="vk-list"><li v-for="g in vk.gerbang" :key="'vkg'+g.kode">{{ g.lolos ? 'Lolos' : 'GUGUR' }} — {{ g.nama }}<span v-if="g.catatan"> ({{ g.catatan }})</span></li></ul>
+ <template v-if="vk.catatan_keras.length"><p class="vk-sub">Catatan keras</p><ul class="vk-list"><li v-for="(c, i) in vk.catatan_keras" :key="'vkc'+i">{{ c }}</li></ul></template>
+ <template v-if="vk.klarifikasi.length"><p class="vk-sub">Data/dokumen yang perlu dilengkapi</p><ul class="vk-list"><li v-for="(c, i) in vk.klarifikasi" :key="'vkk'+i">{{ c }}</li></ul></template>
+ <template v-if="vk.rekomendasi_pengalihan"><p class="vk-sub">Rekomendasi pemangkasan/pengalihan</p><p class="vk-text">{{ vk.rekomendasi_pengalihan }}</p></template>
+ </div>
+ </details>
+ </div>
+
  <!-- Justifikasi Outcome -->
  <div class="justifikasi-card">
  <div class="justifikasi-label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:5px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/></svg>Justifikasi Outcome</div>
@@ -1438,6 +1472,16 @@ const currentYearCard = computed(() => {
 });
 
 const kesesuaian = computed(() => props.analysis.kesesuaianAnggaran || null);
+const vk = computed(() => {
+  const v = props.analysis.verifikasiKelaikan;
+  return v && v.anggaran && Array.isArray(v.kriteria) ? v : null;
+});
+const vkClass = computed(() => {
+  const st = vk.value?.status || '';
+  if (st === 'LAYAK') return 'ok';
+  if (st === 'CUKUP') return 'warn';
+  return 'bad';
+});
 const kesesuaianClass = computed(() => {
  const status = kesesuaian.value?.status || '';
  if (status === 'Sesuai') return 'ok';
@@ -2950,5 +2994,25 @@ const copyJson = async () => {
 .indikator-rincian > summary { cursor: pointer; font-size: 12px; font-weight: 700; color: #0f766e; list-style: revert; }
 .indikator-rincian-list { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.45; color: #334155; }
 .indikator-rincian-list li strong { display: block; color: #0f172a; }
+/* ── Verifikasi Kelaikan ── */
+.vk-card { border: 1.5px solid var(--border-color, #d0d7d5); border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+.vk-card.ok { border-color: var(--success-color); background: var(--success-glow); }
+.vk-card.warn { border-color: var(--warning-glow); background: var(--warning-glow); }
+.vk-card.bad { border-color: var(--danger-glow); background: var(--danger-glow); }
+.vk-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vk-title { font-weight: 700; }
+.vk-status-pill { font-weight: 800; padding: 3px 12px; border-radius: 999px; background: rgba(0,0,0,.08); }
+.vk-card.ok .vk-status-pill { color: #166534; }
+.vk-card.warn .vk-status-pill { color: #92400e; }
+.vk-card.bad .vk-status-pill { color: #991b1b; }
+.vk-summary { display: flex; gap: 22px; flex-wrap: wrap; margin: 10px 0 4px; }
+.vk-stat { display: flex; flex-direction: column; font-size: 13px; }
+.vk-stat-label { opacity: .75; font-size: 12px; }
+.vk-alasan { margin: 6px 0 8px 18px; font-size: 13px; }
+.vk-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.vk-table th, .vk-table td { border: 1px solid rgba(0,0,0,.12); padding: 5px 7px; text-align: left; vertical-align: top; }
+.vk-sub { font-weight: 700; margin: 10px 0 2px; font-size: 13px; }
+.vk-list { margin: 0 0 0 18px; font-size: 13px; }
+.vk-text { font-size: 13px; margin: 0; }
 </style>
 

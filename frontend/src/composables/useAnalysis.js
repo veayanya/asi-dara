@@ -1766,6 +1766,11 @@ function mapAiJsonToAnalysis(jsonResult, meta = {}) {
     // Evaluasi 6 Aspek Efisiensi & Efektivitas RKA
     evaluasiRka: pickField(jsonResult, [
       'evaluasi_rka', 'evaluasiRka', 'rka_evaluation'
+    ], null),
+
+    // Verifikasi Kelaikan (5 Prinsip): skor, gerbang & status dihitung di backend
+    verifikasiKelaikan: pickField(jsonResult, [
+      'verifikasi_kelaikan', 'verifikasiKelaikan'
     ], null)
   };
 }
