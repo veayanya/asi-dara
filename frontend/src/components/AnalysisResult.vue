@@ -834,6 +834,7 @@
 </template>
 
 <script setup>
+import { showToast } from '../utils/toast.js';
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import {
  Chart,
@@ -975,7 +976,10 @@ const handleMuatUlangPdf = async () => {
     await regenerateDocFromStoredText(id, (_prog, text) => { muatUlangText.value = text; }, { allowFallback: useFallback });
   } catch (err) {
     console.error('Muat Ulang PDF gagal:', err);
-    alert('Gagal Muat Ulang PDF: ' + (err.message || 'Terjadi kesalahan'));
+    showToast(
+      err?.code === 'AI_BUSY' ? err.message : ('Muat Ulang PDF belum berhasil: ' + (err?.message || 'Terjadi kesalahan')),
+      { type: err?.code === 'AI_BUSY' ? 'warn' : 'error' }
+    );
   } finally {
     isMuatUlang.value = false;
     muatUlangText.value = '';

@@ -2434,18 +2434,29 @@ async function regenerateDocFromStoredText(targetId, onProgress = () => { }, { a
     throw new Error(src.error || `Teks PDF tersimpan tidak tersedia (${srcRes.status}).`);
   }
 
-  onProgress(40, 'Layanan AI sedang mengevaluasi ulang SROI...');
-  const analysisObj = await processWithAIService(
-    sourceText,
-    existingDoc.namaDokumen,
-    existingDoc.ukuranFile || existingDoc.ukuranBerkas || 0
-  );
-
-  // Bila server jatuh ke Smart Heuristic (AI gagal/kuota habis), jangan timpa hasil lama.
+  // Bila server jatuh ke Smart Heuristic (AI sibuk/kuota habis), coba lagi otomatis
+  // beberapa kali sebelum menyerah. Hasil heuristic TIDAK pernah menimpa hasil lama.
+  const MAX_TRY = 3;
+  let analysisObj = null;
   let metode = '';
-  try { metode = JSON.parse(analysisObj.rawJson || '{}')._metode || ''; } catch { }
+  for (let attempt = 1; attempt <= MAX_TRY; attempt++) {
+    onProgress(40, attempt === 1
+      ? 'Layanan AI sedang mengevaluasi ulang SROI...'
+      : `Layanan AI sedang sibuk, mencoba lagi otomatis (${attempt}/${MAX_TRY})...`);
+    analysisObj = await processWithAIService(
+      sourceText,
+      existingDoc.namaDokumen,
+      existingDoc.ukuranFile || existingDoc.ukuranBerkas || 0
+    );
+    metode = '';
+    try { metode = JSON.parse(analysisObj.rawJson || '{}')._metode || ''; } catch { }
+    if (metode !== 'heuristic') break;
+    if (attempt < MAX_TRY) await new Promise(r => setTimeout(r, attempt * 6000));
+  }
   if (metode === 'heuristic') {
-    throw new Error('Layanan AI belum bisa memproses saat ini (kuota/koneksi). Hasil analisis lama tidak diubah — silakan coba lagi nanti.');
+    const busyErr = new Error('Layanan AI sedang sibuk (kuota/koneksi). Hasil analisis lama tetap dipakai dan tidak diubah — coba lagi beberapa menit lagi.');
+    busyErr.code = 'AI_BUSY';
+    throw busyErr;
   }
 
   // Pertahankan identitas & status dokumen; hanya isi hasil analisis yang diperbarui.

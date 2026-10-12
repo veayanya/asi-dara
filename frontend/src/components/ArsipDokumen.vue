@@ -874,6 +874,7 @@
 </template>
 
 <script setup>
+import { showToast } from '../utils/toast.js';
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useAnalysis, computeSroi16Rules, cleanOpdName } from '../composables/useAnalysis';
 import { downloadAnalysisHtmlReport } from '@/utils/htmlReportGenerator';
@@ -1012,7 +1013,10 @@ const handleMuatUlangPdf = async (item) => {
     if (updated) loadHistoricalDocIntoAnalyzer(updated);
   } catch (err) {
     console.error('Muat Ulang PDF gagal:', err);
-    alert('Gagal Muat Ulang PDF: ' + (err.message || 'Terjadi kesalahan'));
+    showToast(
+      err?.code === 'AI_BUSY' ? err.message : ('Muat Ulang PDF belum berhasil: ' + (err?.message || 'Terjadi kesalahan')),
+      { type: err?.code === 'AI_BUSY' ? 'warn' : 'error' }
+    );
   } finally {
     muatUlangId.value = null;
     muatUlangText.value = '';

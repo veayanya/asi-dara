@@ -93,6 +93,7 @@ function timeoutForPrompt(prompt, options = {}) {
 async function tryKeyWithModels(apiKey, prompt, options = {}) {
  const genAI = new GoogleGenerativeAI(apiKey);
  let lastErr = null;
+ let quotaErr = null; // kuota habis pada salah satu model (kuota tiap model terpisah)
 
  for (const modelName of CANDIDATE_MODELS) {
  for (const useJsonMime of [true, false]) {
@@ -128,7 +129,12 @@ async function tryKeyWithModels(apiKey, prompt, options = {}) {
  lastErr = err;
 
  if (isQuotaError(err)) {
- throw err;
+ // Kuota model ini habis → coba model berikutnya, jangan langsung menyerah.
+ quotaErr = err;
+ console.warn(
+ `[Gemini] Kuota model ${modelName} habis, mencoba model lain...`
+ );
+ break;
  }
 
  if (isInvalidKeyError(err)) {
@@ -148,7 +154,8 @@ async function tryKeyWithModels(apiKey, prompt, options = {}) {
  }
  }
 
- throw lastErr || new Error(
+ // Utamakan error kuota agar pemanggil beralih ke key berikutnya.
+ throw quotaErr || lastErr || new Error(
  'Semua model Gemini gagal untuk key ini.'
  );
 }
@@ -204,6 +211,13 @@ export async function generateContentWithFallback(
 
  throw err;
  }
+ }
+
+ // Rate-limit per menit biasanya pulih dalam hitungan detik: tunggu sebentar, coba 1 putaran lagi.
+ if (lastError && isQuotaError(lastError) && !options._retried) {
+ console.warn('[Gemini] Semua key/model kena batas kuota, menunggu 4 dtk lalu mencoba sekali lagi...');
+ await new Promise(r => setTimeout(r, 4000));
+ return generateContentWithFallback(_unused, clientApiKey, prompt, { ...options, _retried: true });
  }
 
  throw lastError ||
