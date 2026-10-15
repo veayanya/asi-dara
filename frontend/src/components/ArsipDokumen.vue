@@ -72,9 +72,9 @@
  Hapus Terpilih ({{ selectedCount }})
  </button>
  </template>
- <button class="bulk-btn bulk-btn-restore-outline" :disabled="filteredRkis.length === 0 || !!muatUlangId || bulkRunning" @click="handleMuatUlangSemua" :title="selectedCount > 0 ? 'Muat ulang PDF (analisis AI terbaru) untuk dokumen yang dipilih' : 'Muat ulang PDF (analisis AI terbaru) untuk seluruh dokumen yang sedang tampil, satu per satu'">
+ <button class="bulk-btn bulk-btn-restore-outline" :disabled="(rkis || []).length === 0 || !!muatUlangId || bulkRunning" @click="handleMuatUlangSemua" :title="selectedCount > 0 ? 'Muat ulang PDF (analisis AI terbaru) untuk dokumen yang dipilih' : 'Muat ulang PDF (analisis AI terbaru) untuk SELURUH dokumen di arsip (mengabaikan filter), satu per satu'">
  <i data-lucide="rotate-cw" style="width:14px;height:14px;"></i>
- {{ bulkRunning ? 'Memuat ulang…' : (selectedCount > 0 ? `Muat Ulang Terpilih (${selectedCount})` : 'Muat Ulang Semua') }}
+ {{ bulkRunning ? 'Memuat ulang…' : (selectedCount > 0 ? `Muat Ulang Terpilih (${selectedCount})` : `Muat Ulang Semua (${(rkis || []).length})`) }}
  </button>
  <button class="bulk-btn bulk-btn-danger-outline" :disabled="filteredRkis.length === 0" @click="openDeleteAll" title="Hapus seluruh dokumen yang sedang tampil di daftar">
  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
@@ -486,7 +486,7 @@
  <span v-if="bulkRunning" style="opacity:0.7; display:block; margin-bottom:2px;">{{ bulkProgress.current }}</span>
  <span style="opacity:0.85;">{{ muatUlangText }}</span>
  <template v-if="bulkRunning">
- <div style="margin-top:6px; font-size:0.78rem; opacity:0.8;">Berhasil {{ bulkProgress.ok }} · Gagal {{ bulkProgress.failed }} · Dilewati {{ bulkProgress.skipped }}</div>
+ <div style="margin-top:6px; font-size:0.78rem; opacity:0.8;">Berhasil {{ bulkProgress.ok }} · Gagal {{ bulkProgress.failed }}</div>
  <button type="button" style="margin-top:8px; padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.4); background:transparent; color:#fff; cursor:pointer; font-size:0.78rem;" :disabled="bulkCancel" @click="bulkCancel = true">{{ bulkCancel ? 'Berhenti setelah dokumen ini…' : 'Berhenti' }}</button>
  </template>
  </div>
@@ -1130,39 +1130,37 @@ const handleMuatUlangPdf = async (item) => {
 };
 
 // ── Muat Ulang PDF massal ────────────────────────────────────────────
-// Menjalankan Muat Ulang PDF untuk banyak dokumen sekaligus (satu per satu, bukan
-// paralel, supaya kuota AI tidak jebol). Target: dokumen terpilih, atau semua
-// dokumen yang sedang tampil bila tidak ada yang dipilih. Dokumen tanpa teks PDF
-// tersimpan DILEWATI (tidak ditimpa hasil analisis yang kurang akurat); hasil
-// analisis lama tetap ada di riwayat versi. Berhenti otomatis bila AI sibuk/kuota habis.
+// Menjalankan Muat Ulang PDF untuk SELURUH dokumen di arsip (mengabaikan filter/pencarian),
+// atau hanya yang dicentang bila ada pilihan. Diproses satu per satu (bukan paralel)
+// supaya kuota AI tidak jebol. Dokumen yang teks PDF-nya sudah tersimpan dianalisis dari
+// teks PDF; dokumen lama tanpa teks PDF dianalisis dari hasil analisis yang sudah ada
+// (kurang akurat dibanding unggah ulang PDF). Hasil lama selalu tersimpan di riwayat versi.
+// Berhenti otomatis bila AI sibuk/kuota habis; dokumen yang belum sempat diproses bisa
+// dilanjutkan dengan menjalankan tombolnya lagi.
 const bulkRunning = ref(false);
 const bulkCancel = ref(false);
 const bulkProgress = ref({ done: 0, total: 0, ok: 0, failed: 0, skipped: 0, current: '' });
 
 const handleMuatUlangSemua = async () => {
   if (bulkRunning.value || muatUlangId.value) return;
-  const pool = selectedCount.value > 0
-    ? filteredRkis.value.filter(i => selectedIds.value.has(i.id))
-    : filteredRkis.value.slice();
-  if (pool.length === 0) return;
-  const targets = pool.filter(i => i.hasSourceText);
-  const skippedNoText = pool.length - targets.length;
-  if (targets.length === 0) {
-    showToast('Tidak ada dokumen yang teks PDF-nya tersimpan. Gunakan "Unggah Ulang PDF" sekali per dokumen.', { type: 'warn' });
-    return;
-  }
+  const all = Array.isArray(rkis.value) ? rkis.value : [];
+  const targets = selectedCount.value > 0
+    ? all.filter(i => selectedIds.value.has(i.id))
+    : all.slice();
+  if (targets.length === 0) return;
+  const noText = targets.filter(i => !i.hasSourceText).length;
   const estMin = Math.max(1, Math.round(targets.length * 0.5));
   if (!confirm(
-    `Muat Ulang PDF untuk ${targets.length} dokumen?\n\n` +
+    `Muat Ulang PDF untuk ${targets.length} dokumen${selectedCount.value > 0 ? ' terpilih' : ' (seluruh arsip)'}?\n\n` +
     `• AI menganalisis ulang satu per satu (perkiraan ±${estMin}–${estMin * 2} menit). Jangan tutup halaman ini.\n` +
     `• Hasil lama tetap tersimpan di riwayat versi.\n` +
-    (skippedNoText > 0 ? `• ${skippedNoText} dokumen lama tanpa teks PDF tersimpan akan dilewati.\n` : '') +
+    (noText > 0 ? `• ${noText} dokumen lama belum punya teks PDF tersimpan: dianalisis dari hasil analisis yang ada (bisa kurang akurat).\n` : '') +
     `• Proses berhenti otomatis bila layanan AI sibuk/kuota habis.`
   )) return;
 
   bulkRunning.value = true;
   bulkCancel.value = false;
-  bulkProgress.value = { done: 0, total: targets.length, ok: 0, failed: 0, skipped: skippedNoText, current: '' };
+  bulkProgress.value = { done: 0, total: targets.length, ok: 0, failed: 0, skipped: 0, current: '' };
   closeMoreMenu();
 
   let stopReason = '';
@@ -1172,7 +1170,7 @@ const handleMuatUlangSemua = async () => {
     muatUlangId.value = item.id;
     muatUlangText.value = 'Menyiapkan…';
     try {
-      await regenerateDocFromStoredText(item.id, (_p, text) => { muatUlangText.value = text; }, { allowFallback: false });
+      await regenerateDocFromStoredText(item.id, (_p, text) => { muatUlangText.value = text; }, { allowFallback: !item.hasSourceText });
       bulkProgress.value.ok++;
     } catch (err) {
       console.error('Muat Ulang PDF massal gagal untuk', item.id, err);
@@ -1182,14 +1180,14 @@ const handleMuatUlangSemua = async () => {
     bulkProgress.value.done++;
   }
 
-  const { ok, failed, skipped, done, total } = bulkProgress.value;
+  const { ok, failed, done, total } = bulkProgress.value;
   muatUlangId.value = null;
   muatUlangText.value = '';
   bulkRunning.value = false;
   bulkCancel.value = false;
   const sisa = total - done;
   showToast(
-    `Muat Ulang PDF selesai: ${ok} berhasil, ${failed} gagal, ${skipped} dilewati` +
+    `Muat Ulang PDF selesai: ${ok} berhasil, ${failed} gagal` +
     (stopReason ? `. Berhenti karena ${stopReason}${sisa > 0 ? ` (${sisa} dokumen belum diproses — jalankan lagi nanti)` : ''}.` : '.'),
     { type: failed > 0 || stopReason ? 'warn' : 'success' }
   );
