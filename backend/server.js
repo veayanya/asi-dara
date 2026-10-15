@@ -24,7 +24,6 @@ import {
 import sshVersionRouter from './routes/sshVersion.js';
 import backupRouter from './routes/backupRouter.js';
 import dbPoolRouter from './routes/dbPoolRouter.js';
-import dbSlotsRouter from './routes/dbSlotsRouter.js';
 import settingsRouter from './routes/settingsRouter.js';
 import laporanRouter from './routes/laporanRouter.js';
 import aibotRouter from './routes/aibotRouter.js';
@@ -1964,8 +1963,6 @@ app.use('/api/v1/ssh', sshVersionRouter);
 // Mount Backup & Restore routes (Admin, Moderator, User)
 app.use('/api/v1/backup', backupRouter);
 
-// Mount Multi-Database Failover routes (status, failover manual, riwayat migrasi)
-app.use('/api/v1/db/slot-config', dbSlotsRouter);
 app.use('/api/v1/db', dbPoolRouter);
 
 // Mount Settings routes (kontak admin: WA & email, dipakai Form Laporan)
