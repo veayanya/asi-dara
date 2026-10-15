@@ -199,9 +199,17 @@ if (fs.existsSync(frontendDistPath)) {
 let healthCache = { at: 0, body: null };
 const HEALTH_CACHE_MS = Number(process.env.HEALTH_CACHE_MS ?? 15000);
 
+// Hasil GAGAL juga di-cache singkat: frontend memanggil /api/health berulang saat
+// backend bermasalah, dan tiap panggilan sebelumnya mencoba konek ke Neon lagi.
+let healthFailCache = { at: 0, body: null };
+const HEALTH_FAIL_CACHE_MS = Number(process.env.HEALTH_FAIL_CACHE_MS ?? 10000);
+
 app.get('/api/health', async (req, res) => {
 if (HEALTH_CACHE_MS > 0 && healthCache.body && Date.now() - healthCache.at < HEALTH_CACHE_MS) {
 return res.status(200).json(healthCache.body);
+}
+if (HEALTH_FAIL_CACHE_MS > 0 && healthFailCache.body && Date.now() - healthFailCache.at < HEALTH_FAIL_CACHE_MS) {
+return res.status(503).json(healthFailCache.body);
 }
 try {
  // checkDbConnection() sudah melewati pool: bila database aktif kena limit,
@@ -226,7 +234,7 @@ res.status(200).json(body);
 } catch (error) {
 console.error('[Health] Database check failed:', error.message);
  const fallback = getFallbackBackupInfo();
- res.status(503).json({
+ const failBody = {
  success: false,
  backend: 'ok',
  database: 'disconnected',
@@ -234,7 +242,9 @@ console.error('[Health] Database check failed:', error.message);
  // Meski koneksi live gagal, endpoint data (mis. /api/v1/rkis) mungkin
  // masih bisa menjawab dari cadangan lokal jika tersedia.
  fallback
- });
+ };
+ healthFailCache = { at: Date.now(), body: failBody };
+ res.status(503).json(failBody);
  }
 });
 
