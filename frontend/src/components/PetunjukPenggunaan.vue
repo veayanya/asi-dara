@@ -560,6 +560,15 @@
                             <Ico name="search" :size="13" /><span>Cari OPD / Subkeg...</span>
                           </div>
                         </div>
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                          <span class="pt-hl inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-surface px-2.5 py-1 font-semibold text-ink-2"><Ico name="refresh" :size="13" />Muat Ulang Semua (42)</span>
+                        </div>
+                        <div class="pt-hl grid gap-2 sm:grid-cols-3">
+                          <div v-for="f in [['OPD','Semua OPD'],['Tahun','Semua Tahun'],['Urutkan','Tanggal unggah (terbaru)']]" :key="f[0]">
+                            <p class="m-0 mb-0.5 text-[10px] font-bold uppercase text-ink-3">{{ f[0] }}</p>
+                            <div class="flex items-center justify-between rounded-md border border-line bg-surface px-2.5 py-1.5 text-ink-2"><span class="truncate">{{ f[1] }}</span><span aria-hidden="true">▾</span></div>
+                          </div>
+                        </div>
                         <div class="overflow-hidden rounded-md border border-line">
                           <div class="grid grid-cols-[1fr_auto_auto_auto] gap-2 bg-inset px-3 py-1.5 text-[11px] font-bold text-ink-3">
                             <span>Subkegiatan / OPD</span><span>Pagu</span><span>SROI</span><span>Aksi</span>
@@ -838,6 +847,7 @@ const { showNotification } = useAnalysis();
 /* ── Ikon (SVG inline bergaya Lucide; tanpa dependensi) ───────────────── */
 const ICONS = {
   search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   upload: '<path d="M12 13v8"/><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m8 17 4-4 4 4"/>',
@@ -975,7 +985,7 @@ const RAW_PARTS = [
         caption: 'Tiga mode kerja Agentic AI',
         alt: 'Tiga tab mode: Mode 1 Analis Evaluasi RKA, Mode 2 Eksekutor Revisi RKA, Mode 3 Konsultasi Regulasi.',
         keywords: 'chatbot ai agen mode 1 mode 2 mode 3 tab evaluasi revisi konsultasi regulasi server online',
-        img: null
+        img: '/images/petunjuk/b2-langkah1.png'
       },
       {
         id: 'b2-langkah-2',
@@ -992,7 +1002,7 @@ const RAW_PARTS = [
         caption: 'Panel Dokumen RKA & Input Data',
         alt: 'Panel input: kotak unggah dokumen dan kotak teks rincian anggaran berisi contoh program, kegiatan, dan rekening.',
         keywords: 'teks tempel paste rincian anggaran xlsx excel docx csv txt json 20 mb unggah contoh rka bersihkan',
-        img: null
+        img: '/images/petunjuk/b2-langkah2.png'
       },
       {
         id: 'b2-langkah-3',
@@ -1008,7 +1018,7 @@ const RAW_PARTS = [
         caption: 'Jalankan dan hasil evaluasi/revisi',
         alt: 'Kolom instruksi dengan tombol Jalankan Evaluasi dan Reviu RKA, serta panel hasil dengan ikon salin dan cetak.',
         keywords: 'jalankan evaluasi reviu revisi eksekusi generate instruksi arahan pangkas salin copy cetak print pdf',
-        img: null
+        img: '/images/petunjuk/b2-langkah3.png'
       },
       {
         id: 'b2-langkah-4',
@@ -1024,7 +1034,7 @@ const RAW_PARTS = [
         caption: 'Mode 3: Konsultasi Regulasi',
         alt: 'Percakapan Mode 3 dengan tombol pertanyaan cepat, gelembung obrolan, dan kolom pengetikan pesan.',
         keywords: 'konsultasi tanya jawab chat obrolan pertanyaan permendagri 77 ssh sbm geseran belanja hapus histori',
-        img: null
+        img: '/images/petunjuk/b2-langkah4.png'
       }
     ]
   },
@@ -1144,13 +1154,16 @@ const RAW_PARTS = [
         text: 'Semua dokumen RKA yang pernah diolah tersimpan di menu **Arsip Dokumen RKA**.',
         bullets: [
           'Cari dokumen berdasarkan nama OPD, Subkegiatan, atau Tahun Anggaran.',
+          'Persempit daftar dengan filter **OPD** dan **Tahun**, lalu atur urutannya lewat **Urutkan** (tanggal unggah, OPD A–Z/Z–A, atau tahun). Klik **Reset Filter** untuk mengembalikan tampilan awal.',
+          '**Muat Ulang Semua (jumlah dokumen)** menganalisis ulang PDF seluruh arsip dengan AI terbaru, satu per satu, dan **mengabaikan filter**. Bila ada dokumen yang dicentang, tombol berubah menjadi **Muat Ulang Terpilih** dan hanya memproses dokumen itu.',
+          'Hasil analisis lama tetap tersimpan di riwayat versi. Jangan tutup halaman selama proses berjalan; proses berhenti otomatis bila layanan AI sibuk atau kuota habis.',
           'Tabel merinci Pagu, Rasio SROI, Jumlah Versi, serta tanggal pembuatan.',
           'Klik **Lihat Analisis** untuk membuka rincian dokumen.'
         ],
         visual: 'archive',
         caption: 'Daftar Arsip Dokumen RKA',
-        alt: 'Tabel arsip dokumen RKA dengan kolom pencarian, pagu, rasio SROI, dan tombol aksi.',
-        keywords: 'arsip dokumen rka pencarian filter opd subkegiatan tahun riwayat lihat analisis',
+        alt: 'Arsip dokumen RKA dengan kolom pencarian, tombol Muat Ulang Semua, filter OPD, Tahun, Urutkan, serta tabel pagu, rasio SROI, dan tombol aksi.',
+        keywords: 'arsip dokumen rka pencarian filter opd subkegiatan tahun urutkan sortir reset muat ulang semua terpilih analisis ulang riwayat lihat analisis',
         img: null
       },
       {
